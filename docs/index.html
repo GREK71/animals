@@ -66,9 +66,12 @@ p{margin:0}
 @media (max-width:900px){
   .shell{grid-template-columns:1fr}
   .side{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line);flex-direction:row;flex-wrap:wrap;align-items:center;gap:6px;padding:8px 12px}
-  .nav{flex-direction:row;flex-wrap:wrap}
+  .nav{flex-direction:row;flex-wrap:wrap;gap:4px}
+  .nav button{width:auto;padding:6px 10px;font-size:12.5px}
+  .nav button .ic{width:15px;height:15px}
   .nav hr,.proj,.nav .tag{display:none}
 }
+@media (max-width:760px){.brand small,.me span:last-child{display:none}.top{gap:10px}}
 
 main{padding-block:20px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));min-width:0}
 .view-title{display:flex;align-items:baseline;gap:12px;margin-bottom:16px;flex-wrap:wrap}
@@ -108,9 +111,11 @@ main{padding-block:20px 40px;padding-left:max(16px,env(safe-area-inset-left,0px)
 .st{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);white-space:nowrap}
 .st::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--faint)}
 .st.info::before{background:var(--info)}.st.warn::before{background:var(--warn)}.st.ok::before{background:var(--ok)}.st.bad::before{background:var(--bad)}
-.ready{display:inline-flex;gap:4px}
-.ready i{width:16px;height:16px;border-radius:4px;display:grid;place-items:center;font-size:10px;font-style:normal;font-weight:600;background:var(--accent-soft);color:var(--accent)}
+.ready{display:flex;gap:4px;flex-wrap:wrap}
+.ready i{height:18px;padding:0 6px;border-radius:4px;display:inline-flex;align-items:center;font-size:10.5px;line-height:1;font-style:normal;font-weight:600;white-space:nowrap;background:var(--accent-soft);color:var(--accent)}
+.ready i::before{content:"✓ ";font-weight:400;margin-right:2px}
 .ready i.no{background:var(--paper2);color:var(--faint);border:1px dashed var(--line)}
+.ready i.no::before{content:"— "}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 14px;border-radius:8px;background:var(--accent);color:var(--accent-fg);font-weight:500;white-space:nowrap}
 .btn.ghost{background:var(--paper);color:var(--fg);border:1px solid var(--line)}
 .btn.ghost:hover{border-color:var(--muted)}
@@ -123,7 +128,8 @@ main{padding-block:20px 40px;padding-left:max(16px,env(safe-area-inset-left,0px)
 .crow .t{min-width:0;flex:1}
 .crow .t b{display:flex;align-items:center;gap:6px;font-weight:500}
 .crow .t span{display:block;color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.crow .r{display:flex;flex-direction:column;align-items:flex-end;gap:3px;font-size:11.5px;color:var(--muted)}
+.crow .t .ready{display:flex;overflow:visible;white-space:normal;margin-top:5px}
+.crow .r{display:flex;flex-direction:column;align-items:flex-end;gap:3px;font-size:11.5px;color:var(--muted);flex:none;white-space:nowrap}
 .crow:hover .t b{color:var(--accent)}
 .erow{display:grid;grid-template-columns:44px 1fr auto;gap:12px;align-items:center;padding:10px 0;text-align:left;width:100%}
 .erow .no{font-family:var(--mono);font-size:12px;color:var(--faint)}
@@ -140,7 +146,7 @@ main{padding-block:20px 40px;padding-left:max(16px,env(safe-area-inset-left,0px)
 .shot .t span{display:block;color:var(--muted);font-size:12px}
 .shot .r{display:flex;flex-direction:column;align-items:flex-end;gap:4px;font-size:11.5px;color:var(--muted)}
 .next{display:flex;gap:10px;align-items:flex-start;background:var(--accent-soft);border-radius:8px;padding:10px 12px;font-size:12.5px;color:var(--accent);margin-top:10px}
-.next b{font-weight:600}
+.next b{font-weight:600;white-space:nowrap}
 
 /* issues */
 .iss{display:flex;gap:10px;padding:10px 0;align-items:flex-start;text-align:left;width:100%}
@@ -281,8 +287,8 @@ th{font-size:10.5px;color:var(--faint);letter-spacing:.06em;text-transform:upper
     <section class="card">
       <div class="hd"><div><h2>캐릭터</h2><p>레퍼런스 준비: 얼굴 · 시트 · Soul ID · 동물형</p></div><button class="more" data-view="character">전체 보기</button></div>
       <div class="bd row-list">
-        <button class="crow" data-view="character"><span class="av hyun">현</span><span class="t"><b>이현</b><span>도베르만 수인 · 31 · 집주인</span></span><span class="r"><span class="ready"><i>얼굴</i><i>시트</i><i class="no">Soul</i><i class="no">동물</i></span><span class="mono">프롬프트 v1</span></span></button>
-        <button class="crow" data-view="character"><span class="av yoon">윤</span><span class="t"><b>서도윤</b><span>골든 리트리버 수인 · 28 · 입주자</span></span><span class="r"><span class="ready"><i class="no">얼굴</i><i class="no">시트</i><i class="no">Soul</i><i class="no">동물</i></span><span class="mono">프롬프트 v1</span></span></button>
+        <button class="crow" data-view="character"><span class="av hyun">현</span><span class="t"><b>이현</b><span>도베르만 수인 · 31 · 집주인</span><span class="ready"><i>얼굴</i><i>시트</i><i class="no">Soul ID</i><i class="no">동물형</i></span></span><span class="r"><span class="mono">v1</span></span></button>
+        <button class="crow" data-view="character"><span class="av yoon">윤</span><span class="t"><b>서도윤</b><span>골든 리트리버 수인 · 28 · 입주자</span><span class="ready"><i class="no">얼굴</i><i class="no">시트</i><i class="no">Soul ID</i><i class="no">동물형</i></span></span><span class="r"><span class="mono">v1</span></span></button>
         <div class="crow"><span class="av ghost">?</span><span class="t"><b class="muted">세 번째 입주자</b><span>종·관계 미정</span></span><span class="r"><span class="chip todo">미정 항목</span></span></div>
       </div>
     </section>
@@ -437,7 +443,7 @@ th{font-size:10.5px;color:var(--faint);letter-spacing:.06em;text-transform:upper
 
   <aside class="col">
     <section class="card"><div class="hd"><div><h2>다른 캐릭터</h2></div></div><div class="bd row-list">
-      <button class="crow"><span class="av yoon">윤</span><span class="t"><b>서도윤</b><span>골든 리트리버 수인 · 28</span></span><span class="r"><span class="ready"><i class="no">얼굴</i><i class="no">시트</i><i class="no">동물</i></span></span></button>
+      <button class="crow"><span class="av yoon">윤</span><span class="t"><b>서도윤</b><span>골든 리트리버 수인 · 28</span><span class="ready"><i class="no">얼굴</i><i class="no">시트</i><i class="no">Soul ID</i></span></span></button>
     </div></section>
     <section class="card"><div class="hd"><div><h2>참조 중인 곳</h2><p>이 캐릭터를 쓰는 생성 시도</p></div></div><div class="bd vers">
       <div><span class="v">run</span><span>EP.01 샷 3a · 시도 1 · 프롬프트 v1</span><span class="muted small">10.27</span></div>
