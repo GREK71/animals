@@ -1,0 +1,16 @@
+services:
+  archive:
+    build: .
+    image: animal-house-archive:latest
+    container_name: animal-house-archive
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      SESSION_SECRET: ${SESSION_SECRET:?SESSION_SECRET를 .env에 32자 이상으로 넣으세요}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?ADMIN_PASSWORD를 .env에 넣으세요}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+    volumes:
+      # 호스트 폴더가 없으면 Docker가 root 소유로 만들지만, entrypoint가 node 소유로 바꿔 준다.
+      - ./data:/data
