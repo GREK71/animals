@@ -2,7 +2,7 @@
 
 AI 인플루언서 채널 "수인 쉐어하우스"의 기획 문서와 제작 아카이브 화면 시안.
 
-- 화면 시안 (클릭형): https://drgopro.github.io/animals/
+- 화면 시안 (클릭형): https://grek71.github.io/animals/
 - 화면 기획서: [docs/screen-plan.md](docs/screen-plan.md)
 - 콘텐츠 계획 (첫 3편 샷·프롬프트): [docs/content-plan.md](docs/content-plan.md)
 - 도윤 비주얼 기준: [docs/visual-doyoon.md](docs/visual-doyoon.md)
