@@ -60,21 +60,23 @@
 이현은 인간형이며 완전히 인간처럼 보인다. 동물 귀, 꼬리, 털, 주둥이 등 눈에 띄는 동물 특징은 없다. 실사 영상처럼 현실적인 피부와 자연스러운 움직임, 조명을 사용한다.
 ```
 
-### 서도윤 (제안안, 레퍼런스 확정 전)
+### 서도윤 (얼굴 기준 반영안)
 
-현재 저장소에는 도윤의 얼굴 레퍼런스가 없다. 아래는 설정 문서를 바탕으로 한 제안안이며, 얼굴 이미지가 확정되면 첫 문단만 교체한다.
+얼굴 기준은 `docs/visual-doyoon.md`를 따른다. 이전 기획의 도윤 얼굴 가이드에서 생김새만 가져오고, 표정 기본값은 이 기획의 성격(해맑은 골든 리트리버 수인)에 맞춰 바꾼다. 도윤 얼굴 레퍼런스 이미지는 아직 저장소에 없으므로 추가 후 모든 생성에 첨부한다.
 
 ```
 서도윤은 28세 한국인 남성으로, 키 187cm의 모델 체형이다. 첨부한 도윤 얼굴 이미지를 얼굴 정체성의 최우선 기준으로 사용한다. 모든 프레임에서 동일 인물로 보여야 한다.
 
-젊고 밝은 미형이며 실제 사람처럼 자연스러운 피부 결과 미세한 비대칭이 있다. 과도하게 보정된 아이돌/AI 미남상으로 만들지 않는다.
+얼굴 레퍼런스의 쌍꺼풀이 거의 없는 무쌍 눈, 약간 큰 코, 두껍지 않은 입술, 자연스럽게 헝클어진 짙은 머리, 피부색과 자연스러운 피부 결을 유지한다. 20대 후반에서 30대 초반으로 보이는 인상이다. 실제 사람처럼 자연스러운 개성과 미세한 비대칭이 있으며, 과도하게 보정된 아이돌/AI 미남상으로 만들지 않는다. 눈을 크게 만들거나 쌍꺼풀을 추가하지 않는다.
 
-골든 리트리버 수인의 인상은 외형 표식이 아니라 크고 잘 웃는 눈, 열려 있는 자세, 사람을 향해 몸이 먼저 기우는 반응, 감정이 얼굴에 바로 드러나는 솔직한 표정에서 드러난다. 기분이 좋으면 온 얼굴이 환해지고, 멈칫할 때는 아차 하는 표정이 숨겨지지 않는다.
+레퍼런스 이미지의 표정이 차분해도 얼굴 생김새만 유지하고 표정은 아래 지시를 따른다. 골든 리트리버 수인의 인상은 외형 표식이 아니라 열려 있는 자세, 사람을 향해 몸이 먼저 기우는 반응, 감정이 얼굴에 바로 드러나는 솔직한 표정에서 드러난다. 기분이 좋으면 눈이 가늘어지며 온 얼굴이 환해지고, 멈칫할 때는 아차 하는 표정이 숨겨지지 않는다. 웃으면 평소보다 인상이 확실히 부드러워진다.
 
-체형은 키 크고 균형 잡힌 모델 체형으로, 이현보다 어깨가 조금 더 넓지만 과하게 근육질은 아니다. 기본 의상은 밝은 색(크림, 베이지, 연회색) 후드티나 맨투맨에 편한 바지 같은 홈웨어 차림으로, 검정 니트의 이현과 화면에서 대비된다.
+체형은 키 크고 균형 잡힌 모델 체형으로, 이현보다 어깨가 조금 더 넓지만 과하게 근육질은 아니다. 기본 의상은 밝은 색(크림, 베이지, 연회색) 후드티나 맨투맨에 편한 바지 같은 현실적인 홈웨어 차림으로, 검정 니트의 이현과 화면에서 대비된다.
 
 서도윤은 인간형이며 완전히 인간처럼 보인다. 동물 귀, 꼬리, 털, 주둥이 등 눈에 띄는 동물 특징은 없다. 실사 영상처럼 현실적인 피부와 자연스러운 움직임, 조명을 사용한다.
 ```
+
+영어 샷 프롬프트에서 도윤을 묘사할 때는 `monolid eyes (no double eyelid), slightly large nose, thin lips, naturally messy dark hair` 를 얼굴 레퍼런스 언급 뒤에 붙인다.
 
 ### 공통 장면 프롬프트 틀
 
@@ -122,7 +124,7 @@
 ```
 
 ```
-A 28-year-old Korean man (use attached face reference as the primary identity; same person in every frame), 187cm, tall model build, wearing a cream hoodie, sits slumped on a grey fabric sofa in a warmly lit sharehouse living room at night, scrolling his phone. Off-screen, a door lock beeps. His thumb stops. His head snaps toward the hallway; his upper body leans forward slightly. His bored face lights up instantly: eyes widen, a smile breaks out, he holds his breath as if pinpointing the sound. Golden-retriever-like warmth shown only through expression and posture, no animal features. Medium close-up from the chest up, static camera, shallow depth of field, vertical 9:16, realistic skin texture, natural tungsten interior lighting, photoreal live-action look. No text or captions in frame.
+A 28-year-old Korean man (use attached face reference as the primary identity; same person in every frame; monolid eyes with no double eyelid, slightly large nose, thin lips, naturally messy dark hair), 187cm, tall model build, wearing a cream hoodie, sits slumped on a grey fabric sofa in a warmly lit sharehouse living room at night, scrolling his phone. Off-screen, a door lock beeps. His thumb stops. His head snaps toward the hallway; his upper body leans forward slightly. His bored face lights up instantly: eyes widen, a smile breaks out, he holds his breath as if pinpointing the sound. Golden-retriever-like warmth shown only through expression and posture, no animal features. Medium close-up from the chest up, static camera, shallow depth of field, vertical 9:16, realistic skin texture, natural tungsten interior lighting, photoreal live-action look. No text or captions in frame.
 ```
 
 ### 샷 2 | 벌떡 일어나 현관으로 (도윤, 5초)
@@ -339,7 +341,7 @@ Extreme close-up of a front-load washing machine's round glass door. Inside, a s
 ```
 
 ```
-A 28-year-old Korean man (attached face reference, cream hoodie, tall model build) leans his upper body in through a laundry-room doorway, looking down toward someone crouched off-screen in front of a washing machine. He grins proudly as if announcing he did a good deed, says a short line, then tilts his head noticeably when he gets no answer. Completely oblivious, bright, open expression. Medium close-up from the chest up, slightly low angle, static camera, vertical 9:16, mixed cool and warm practical lighting, photoreal live-action. No text in frame.
+A 28-year-old Korean man (attached face reference; monolid eyes, slightly large nose, thin lips, messy dark hair; cream hoodie, tall model build) leans his upper body in through a laundry-room doorway, looking down toward someone crouched off-screen in front of a washing machine. He grins proudly as if announcing he did a good deed, says a short line, then tilts his head noticeably when he gets no answer. Completely oblivious, bright, open expression. Medium close-up from the chest up, slightly low angle, static camera, vertical 9:16, mixed cool and warm practical lighting, photoreal live-action. No text in frame.
 ```
 
 ### 샷 4 | 엔딩: "...냄새." (이현, 5초)
@@ -374,8 +376,9 @@ Close-up of a 31-year-old Korean man's face (attached face reference), crouched 
 
 ## 8. 제작 전 확정이 필요한 항목
 
-1. 도윤 인간형 얼굴 레퍼런스 이미지 1장 (현재 저장소에는 이현 이미지 2장만 있음).
+1. 도윤 인간형 얼굴 레퍼런스 이미지 (이전 기획의 프로필 이미지 2종·캐릭터 시트를 `visual/`에 추가. 현재 저장소에는 이현 이미지 2장만 있음). 얼굴 기준은 `docs/visual-doyoon.md`.
 2. 도윤 리트리버형 레퍼런스 이미지 1장 (EP.02용. 털 색, 얼굴 무늬, 목줄 색).
 3. 쉐어하우스 거실·현관·세탁실 배경 레퍼런스 (전 에피소드에서 같은 집으로 보이게).
 4. 두 사람의 기본 홈웨어 색 확정 (제안: 이현 검정, 도윤 크림색).
+6. 채널 전체의 영상 질감 방향 (스마트폰 브이로그 톤 vs 정돈된 웹드라마 톤). 이전 도윤 가이드는 스마트폰 톤이었음.
 5. 엔드카드 디자인과 채널명 표기 방식.
