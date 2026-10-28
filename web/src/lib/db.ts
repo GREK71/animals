@@ -2,6 +2,7 @@ import Database from "better-sqlite3";
 import fs from "node:fs";
 import path from "node:path";
 import bcrypt from "bcryptjs";
+import crypto from "node:crypto";
 import { seedAll } from "./seed";
 
 // 문서형 저장소: 각 테이블은 id + JSON data. 부모 참조는 별도 컬럼으로 둔다.
@@ -65,19 +66,49 @@ function seedIfEmpty(db: Database.Database) {
   const userCount = (db.prepare("SELECT COUNT(*) AS n FROM users").get() as { n: number }).n;
   if (userCount === 0) {
     const username = process.env.ADMIN_USERNAME || "admin";
-    let password = process.env.ADMIN_PASSWORD;
-    if (!password) {
-      if (process.env.NODE_ENV === "production") throw new Error("첫 실행에는 ADMIN_PASSWORD가 필요합니다. .env에 넣고 다시 시작하세요.");
-      password = "changeme";
-      console.warn("[archive] 개발 환경: ADMIN_PASSWORD가 없어 기본 계정 admin / changeme 를 만들었습니다.");
+    const password = process.env.ADMIN_PASSWORD;
+    if (password) {
+      db.prepare("INSERT INTO users (username, name, password_hash, role) VALUES (?, ?, ?, 'admin')").run(username, "운영자", bcrypt.hashSync(password, 10));
+    } else {
+      // 계정이 없으면 /setup 화면에서 첫 관리자를 만든다. 아무나 선점하지 못하도록 일회용 토큰을 요구한다.
+      const token = ensureSetupToken();
+      console.log(`[archive] 계정이 없습니다. 브라우저에서 /setup 을 열고 설정 토큰을 입력해 첫 관리자 계정을 만드세요.\n[archive] 설정 토큰: ${token}  (파일: ${setupTokenPath()})`);
     }
-    db.prepare("INSERT INTO users (username, name, password_hash, role) VALUES (?, ?, ?, 'admin')").run(username, "운영자", bcrypt.hashSync(password, 10));
   }
   const charCount = (db.prepare("SELECT COUNT(*) AS n FROM characters").get() as { n: number }).n;
   if (charCount === 0 && process.env.SEED_EXAMPLES !== "false") {
     seedAll(db);
     console.log("[archive] 예시 데이터를 넣었습니다.");
   }
+}
+
+function setupTokenPath() {
+  return path.join(dataDir(), "setup-token.txt");
+}
+
+function ensureSetupToken() {
+  const p = setupTokenPath();
+  try {
+    const t = fs.readFileSync(p, "utf8").trim();
+    if (t) return t;
+  } catch { /* 없으면 새로 만든다 */ }
+  const t = crypto.randomBytes(16).toString("hex");
+  fs.writeFileSync(p, t + "\n", { mode: 0o600 });
+  return t;
+}
+
+// 첫 관리자 등록에 필요한 토큰. 계정이 생기면 null.
+export function setupToken(): string | null {
+  if (hasUsers()) return null;
+  return ensureSetupToken();
+}
+
+export function clearSetupToken() {
+  fs.rmSync(setupTokenPath(), { force: true });
+}
+
+export function hasUsers() {
+  return (getDb().prepare("SELECT COUNT(*) AS n FROM users").get() as { n: number }).n > 0;
 }
 
 export function getDb() {

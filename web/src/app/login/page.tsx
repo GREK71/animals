@@ -1,8 +1,10 @@
 import { redirect } from "next/navigation";
+import { hasUsers } from "@/lib/db";
 import { currentUser } from "@/lib/session";
 import LoginForm from "./LoginForm";
 
 export default async function LoginPage({ searchParams }: PageProps<"/login">) {
+  if (!hasUsers()) redirect("/setup");
   if (await currentUser()) redirect("/");
   const sp = await searchParams;
   const next = typeof sp.next === "string" ? sp.next : "/";

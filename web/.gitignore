@@ -42,3 +42,6 @@ next-env.d.ts
 
 # app data
 /data
+
+# 예시 환경 파일은 저장소에 포함
+!.env.example
