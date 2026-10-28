@@ -26,7 +26,7 @@ npm run dev            # http://localhost:3000
 
 첫 실행 때 `web/data/archive.sqlite`가 만들어지고 예시 데이터가 들어간다. 예시 데이터를 넣지 않으려면 `SEED_EXAMPLES=false`.
 
-계정이 하나도 없으면 첫 접속 때 `/setup` 화면(관리자 등록)이 열리고, 여기서 만든 첫 계정이 관리자가 된다. 아무나 선점하지 못하도록 서버 시작 로그에 찍히는 설정 토큰(`data/setup-token.txt`)을 입력해야 하며, 계정이 만들어지면 토큰은 지워진다. `.env`에 ADMIN_PASSWORD를 넣어 두면 그 값으로 운영자 계정(ADMIN_USERNAME, 기본 admin)을 자동으로 만들고 `/setup`은 건너뛴다.
+계정이 하나도 없으면 첫 접속 때 `/setup` 화면(마스터 등록)이 열리고, 여기서 만든 첫 계정이 마스터가 된다. 아무나 선점하지 못하도록 서버 시작 로그에 찍히는 설정 토큰(`data/setup-token.txt`)을 입력해야 하며, 계정이 만들어지면 토큰은 지워진다. `.env`에 ADMIN_PASSWORD를 넣어 두면 그 값으로 운영자 계정(ADMIN_USERNAME, 기본 admin)을 자동으로 만들고 `/setup`은 건너뛴다.
 
 ### NAS 배포 (Docker)
 
@@ -39,7 +39,7 @@ docker compose up -d --build
 - 데이터는 `web/data`(컨테이너의 `/data`)에 SQLite 파일 하나로 저장된다. 이 폴더를 NAS 백업(Hyper Backup, 스냅샷)에 포함한다.
 - 포트는 3000. 외부 접속은 포트 포워딩 대신 Tailscale 같은 VPN을 권장한다.
 - HTTPS 리버스 프록시 뒤에 두면 `.env`에 `COOKIE_SECURE=true`.
-- 동료 계정은 관리자가 로그인 후 설정 화면에서 만든다. 첫 계정(`/setup`에서 만들거나 ADMIN_USERNAME)이 관리자다.
+- 역할은 마스터 > 관리자 > 멤버. 첫 계정(`/setup`에서 만들거나 ADMIN_USERNAME)이 유일한 마스터이며 지울 수 없다. 마스터와 관리자가 설정 화면에서 관리자/멤버 계정을 만들고 지운다. 관리자는 마스터 계정을 관리할 수 없다.
 - 로그인은 IP·아이디별 5회 실패 시 10분 잠금. 비밀번호를 바꾸면 다른 기기의 세션은 모두 풀린다.
 - 백업: 설정 화면의 "지금 백업 파일 만들기"가 WAL까지 합친 스냅샷을 `data/backups/`에 만든다. NAS 백업은 `web/data` 폴더 전체를 대상으로 한다.
 
@@ -59,14 +59,14 @@ ufw allow OpenSSH && ufw allow 3000/tcp && ufw --force enable
 ```
 
 - `docker compose logs archive | grep 토큰` 으로 설정 토큰을 확인한다 (또는 `cat data/setup-token.txt`).
-- 브라우저에서 `http://서버IP:3000` 을 열면 `/setup` 관리자 등록 화면이 나온다. 토큰과 아이디·비밀번호를 넣으면 계정이 만들어지고 바로 로그인된다.
+- 브라우저에서 `http://서버IP:3000` 을 열면 `/setup` 마스터 등록 화면이 나온다. 토큰과 아이디·비밀번호를 넣으면 계정이 만들어지고 바로 로그인된다.
 - 코드가 바뀌면 `cd /opt/animals && git pull && cd web && docker compose up -d --build`.
 - 데이터는 `/opt/animals/web/data` 에 남는다. 컨테이너를 지워도 유지된다.
 - 도메인을 붙이면 Caddy 같은 리버스 프록시로 HTTPS를 두고 `.env`에 `COOKIE_SECURE=true`.
 
 ### 구조
 
-- `src/app/setup` 첫 관리자 등록 (계정이 없을 때만), `src/app/login` 로그인 (서버 액션), `src/app/api/login` 스크립트용 로그인 API
+- `src/app/setup` 첫 마스터 계정 등록 (계정이 없을 때만), `src/app/login` 로그인 (서버 액션), `src/app/api/login` 스크립트용 로그인 API
 - `src/proxy.ts` 세션 쿠키 없으면 /login으로
 - `src/app/(app)/*` 홈, 캐릭터, 장소, 에피소드(샷·생성, 프롬프트 조합, 게시), 소재, 미정 항목, 설정
 - `src/lib/db.ts` 문서형 SQLite 저장소, `src/lib/seed.ts` 예시 데이터

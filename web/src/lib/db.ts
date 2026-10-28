@@ -57,9 +57,16 @@ function migrateUsers(db: Database.Database) {
   const cols = (db.prepare("PRAGMA table_info(users)").all() as { name: string }[]).map((c) => c.name);
   if (!cols.includes("role")) db.exec("ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'member'");
   if (!cols.includes("session_version")) db.exec("ALTER TABLE users ADD COLUMN session_version INTEGER NOT NULL DEFAULT 1");
-  // 관리자가 한 명도 없으면 가장 먼저 만든 계정을 관리자로
-  const admins = (db.prepare("SELECT COUNT(*) AS n FROM users WHERE role = 'admin'").get() as { n: number }).n;
-  if (admins === 0) db.exec("UPDATE users SET role = 'admin' WHERE id = (SELECT MIN(id) FROM users)");
+  // 마스터는 정확히 하나. 없으면 가장 이른 관리자(없으면 가장 이른 계정)를 승격하고,
+  // 둘 이상이면 가장 이른 하나만 남기고 관리자로 내린다. 부분 유니크 인덱스로 DB에서도 보장한다.
+  const masters = (db.prepare("SELECT COUNT(*) AS n FROM users WHERE role = 'master'").get() as { n: number }).n;
+  if (masters === 0) {
+    db.exec(`UPDATE users SET role = 'master' WHERE id = COALESCE(
+      (SELECT MIN(id) FROM users WHERE role = 'admin'), (SELECT MIN(id) FROM users))`);
+  } else if (masters > 1) {
+    db.exec("UPDATE users SET role = 'admin' WHERE role = 'master' AND id != (SELECT MIN(id) FROM users WHERE role = 'master')");
+  }
+  db.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_single_master ON users(role) WHERE role = 'master'");
 }
 
 function seedIfEmpty(db: Database.Database) {
@@ -68,7 +75,7 @@ function seedIfEmpty(db: Database.Database) {
     const username = process.env.ADMIN_USERNAME || "admin";
     const password = process.env.ADMIN_PASSWORD;
     if (password) {
-      db.prepare("INSERT INTO users (username, name, password_hash, role) VALUES (?, ?, ?, 'admin')").run(username, "운영자", bcrypt.hashSync(password, 10));
+      db.prepare("INSERT INTO users (username, name, password_hash, role) VALUES (?, ?, ?, 'master')").run(username, "운영자", bcrypt.hashSync(password, 10));
     } else {
       // 계정이 없으면 /setup 화면에서 첫 관리자를 만든다. 아무나 선점하지 못하도록 일회용 토큰을 요구한다.
       const token = ensureSetupToken();

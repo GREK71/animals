@@ -13,7 +13,7 @@ export default function SetupForm({ token }: { token: string }) {
       <label>비밀번호 (8자 이상)<input id="password" name="password" type="password" autoComplete="new-password" minLength={8} required /></label>
       <label>비밀번호 확인<input id="confirm" name="confirm" type="password" autoComplete="new-password" minLength={8} required /></label>
       {state.error && <div className="err" role="alert">{state.error}</div>}
-      <button className="btn w" type="submit" disabled={pending}>{pending ? "만드는 중…" : "관리자 계정 만들기"}</button>
+      <button className="btn w" type="submit" disabled={pending}>{pending ? "만드는 중…" : "마스터 계정 만들기"}</button>
     </form>
   );
 }

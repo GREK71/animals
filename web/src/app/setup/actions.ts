@@ -15,7 +15,7 @@ function tokenMatches(input: string, expected: string) {
   return a.length === b.length && crypto.timingSafeEqual(a, b);
 }
 
-// 첫 관리자 계정 만들기. 계정이 하나라도 있으면 거부하고(트랜잭션 안에서 다시 확인),
+// 첫 계정(마스터) 만들기. 계정이 하나라도 있으면 거부하고(트랜잭션 안에서 다시 확인),
 // 서버 로그에 찍힌 설정 토큰이 맞아야 한다.
 export async function setupAdmin(_prev: SetupState, form: FormData): Promise<SetupState> {
   if (hasUsers()) return { error: "이미 계정이 있습니다. 로그인 화면으로 이동하세요." };
@@ -39,7 +39,7 @@ export async function setupAdmin(_prev: SetupState, form: FormData): Promise<Set
   const created = db.transaction(() => {
     const n = (db.prepare("SELECT COUNT(*) AS n FROM users").get() as { n: number }).n;
     if (n > 0) return null;
-    const r = db.prepare("INSERT INTO users (username, name, password_hash, role) VALUES (?, ?, ?, 'admin')").run(username, name, hash);
+    const r = db.prepare("INSERT INTO users (username, name, password_hash, role) VALUES (?, ?, ?, 'master')").run(username, name, hash);
     return db.prepare("SELECT id, username, name, role, session_version FROM users WHERE id = ?").get(r.lastInsertRowid) as User;
   })();
   if (!created) return { error: "이미 계정이 있습니다. 로그인 화면으로 이동하세요." };

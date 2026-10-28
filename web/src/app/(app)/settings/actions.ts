@@ -5,7 +5,7 @@ import bcrypt from "bcryptjs";
 import { backupDatabase, getDb } from "@/lib/db";
 import { establishSession, requireAdmin, requireUser, type User } from "@/lib/session";
 
-// 계정 추가·삭제는 관리자만.
+// 계정 추가·삭제는 마스터·관리자만. 만들 수 있는 역할은 관리자/멤버뿐 (마스터는 첫 계정 하나).
 export async function addUser(form: FormData) {
   await requireAdmin();
   const username = String(form.get("username") ?? "").trim();
@@ -19,15 +19,14 @@ export async function addUser(form: FormData) {
   revalidatePath("/settings");
 }
 
+// 마스터 계정은 누구도 지울 수 없다 (관리자는 마스터를 관리하지 못함).
 export async function removeUser(form: FormData) {
   const me = await requireAdmin();
   const id = Number(form.get("id"));
   if (!id || id === me.id) return;
-  const admins = (getDb().prepare("SELECT COUNT(*) AS n FROM users WHERE role = 'admin'").get() as { n: number }).n;
   const target = getDb().prepare("SELECT role FROM users WHERE id = ?").get(id) as { role: string } | undefined;
-  if (!target) return;
-  if (target.role === "admin" && admins <= 1) return; // 마지막 관리자는 삭제 불가
-  getDb().prepare("DELETE FROM users WHERE id = ?").run(id);
+  if (!target || target.role === "master") return;
+  getDb().prepare("DELETE FROM users WHERE id = ? AND role != 'master'").run(id);
   revalidatePath("/settings");
 }
 

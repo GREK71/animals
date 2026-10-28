@@ -6,7 +6,17 @@ import bcrypt from "bcryptjs";
 import { getDb } from "./db";
 
 export type SessionData = { userId?: number; sv?: number };
-export type User = { id: number; username: string; name: string; role: "admin" | "member"; session_version: number };
+export type Role = "master" | "admin" | "member";
+export type User = { id: number; username: string; name: string; role: Role; session_version: number };
+
+// 마스터 > 관리자 > 멤버. 마스터는 첫 계정 하나뿐이며 관리자가 손댈 수 없다.
+export function canManage(u: User) {
+  return u.role === "master" || u.role === "admin";
+}
+
+export function roleLabel(role: string) {
+  return role === "master" ? "마스터" : role === "admin" ? "관리자" : "멤버";
+}
 
 export const COOKIE_NAME = "ah_session";
 
@@ -53,9 +63,10 @@ export async function requireUser() {
   return u;
 }
 
+// 계정·백업 관리 권한: 마스터 또는 관리자
 export async function requireAdmin() {
   const u = await requireUser();
-  if (u.role !== "admin") redirect("/");
+  if (!canManage(u)) redirect("/");
   return u;
 }
 

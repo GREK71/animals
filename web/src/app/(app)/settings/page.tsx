@@ -1,11 +1,11 @@
 import { count, dataDir, getDb, listBackups } from "@/lib/db";
-import { requireUser } from "@/lib/session";
+import { canManage, requireUser, roleLabel } from "@/lib/session";
 import { Card, Field, Sec } from "@/components/ui";
 import { addUser, changePassword, makeBackup, removeUser } from "./actions";
 
 export default async function Settings() {
   const me = await requireUser();
-  const isAdmin = me.role === "admin";
+  const isAdmin = canManage(me);
   const users = getDb().prepare("SELECT id, username, name, role, created_at FROM users ORDER BY id").all() as { id: number; username: string; name: string; role: string; created_at: string }[];
   const backups = listBackups();
   const tables = ["characters", "places", "episodes", "shots", "runs", "variants", "assets", "issues", "prompt_versions"];
@@ -14,9 +14,9 @@ export default async function Settings() {
       <div className="view-title"><h1>설정</h1><span className="id">S-01</span><span className="crumb">프로젝트 · 계정 · 생성 도구 · 백업</span></div>
       <div className="detail">
         <section className="card"><div className="pane">
-          <Sec title="계정" more={isAdmin ? "관리자만 계정을 만들고 지울 수 있습니다" : "계정 관리는 관리자에게 요청하세요"} first>
+          <Sec title="계정" more={isAdmin ? "마스터·관리자가 계정을 만들고 지웁니다. 마스터 계정은 지울 수 없습니다" : "계정 관리는 관리자에게 요청하세요"} first>
             <div className="tw"><table><thead><tr><th>아이디</th><th>이름</th><th>역할</th><th>생성</th><th></th></tr></thead><tbody>
-              {users.map((u) => <tr key={u.id}><td className="mono">{u.username}</td><td>{u.name}{u.id === me.id && <span className="chip role" style={{ marginLeft: 6 }}>나</span>}</td><td>{u.role === "admin" ? "관리자" : "멤버"}</td><td className="muted small">{u.created_at.slice(0, 10)}</td><td>{isAdmin && u.id !== me.id && <form action={removeUser}><input type="hidden" name="id" value={u.id} /><button className="btn sm ghost" type="submit">삭제</button></form>}</td></tr>)}
+              {users.map((u) => <tr key={u.id}><td className="mono">{u.username}</td><td>{u.name}{u.id === me.id && <span className="chip role" style={{ marginLeft: 6 }}>나</span>}</td><td>{u.role === "master" ? <span className="chip role">마스터</span> : roleLabel(u.role)}</td><td className="muted small">{u.created_at.slice(0, 10)}</td><td>{isAdmin && u.id !== me.id && u.role !== "master" && <form action={removeUser}><input type="hidden" name="id" value={u.id} /><button className="btn sm ghost" type="submit">삭제</button></form>}</td></tr>)}
             </tbody></table></div>
             {isAdmin && <form className="form" action={addUser} style={{ marginTop: 14 }}>
               <label>아이디<input id="new-username" name="username" required pattern="[A-Za-z0-9_.\-]{3,32}" /></label>
