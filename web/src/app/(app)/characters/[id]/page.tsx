@@ -1,9 +1,13 @@
+/* eslint-disable @next/next/no-img-element -- 업로드 파일은 로그인 뒤 /files 로만 서빙되어 next/image 최적화를 쓰지 않는다 */
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { all, one } from "@/lib/db";
 import { STATUS_CLASS, STATUS_LABEL, type Asset, type Character, type Episode, type Issue, type PromptVersion, type RelationChange } from "@/lib/types";
 import { Avatar, Card, Field, ReadyBadges, Sec, Status, Tabs } from "@/components/ui";
 import CopyButton from "@/components/CopyButton";
+import UploadForm from "@/components/UploadForm";
+import { filesFor } from "@/lib/files";
+import { deleteCharacterFile, uploadCharacterFiles } from "./actions";
 
 const TABS = [{ key: "basic", label: "기본" }, { key: "visual", label: "비주얼 가이드" }, { key: "voice", label: "성격·말투" }, { key: "rel", label: "관계" }, { key: "ep", label: "에피소드" }, { key: "asset", label: "소재" }];
 
@@ -20,6 +24,7 @@ export default async function CharacterPage({ params, searchParams }: PageProps<
   const episodes = all<Episode>("episodes", undefined, "no").filter((e) => e.characters.includes(id));
   const changes = all<RelationChange>("relation_changes");
   const assets = all<Asset>("assets").filter((a) => a.role.includes(c.name) || a.links?.includes(c.name));
+  const uploads = filesFor("character", id);
 
   return (
     <>
@@ -52,9 +57,23 @@ export default async function CharacterPage({ params, searchParams }: PageProps<
 
           {tab === "visual" && (
             <div className="pane">
-              <Sec title="레퍼런스 슬롯" more="앵커 역할 · 승인 상태 · 권리" first>
+              <Sec title="레퍼런스 슬롯" more="PNG · JPG · WEBP, 장당 20MB까지 · 생성 시 AI가 이 이미지를 보고 외형을 옮깁니다" first>
                 <div className="slots">
-                  {c.slots.map((s) => <div key={s.role} className={`slot ${s.empty ? "empty" : ""}`}><span className="ph">{s.note ?? (s.empty ? "미등록" : "이미지")}</span><b>{s.role}</b><span>{s.file}</span><Status cls={s.empty ? (s.status === "미학습" ? "warn" : "") : "ok"}>{s.status}</Status></div>)}
+                  {c.slots.map((s) => {
+                    const fs = uploads.filter((f) => f.slot === s.role);
+                    const multi = s.role.includes("학습 세트");
+                    const empty = fs.length === 0;
+                    return (
+                      <div key={s.role} className={`slot ${empty ? "empty" : ""}`}>
+                        <span className="ph">{fs[0] ? <img src={`/files/${fs[0].id}`} alt={s.role} /> : (s.note ?? "미등록")}</span>
+                        <b>{s.role}</b>
+                        {empty ? <><span>{s.file}</span><Status cls={s.status === "미학습" ? "warn" : ""}>{s.status}</Status></> : <Status cls="ok">{multi ? `${fs.length}장 등록` : "등록됨"}</Status>}
+                        {fs.length > 1 && <div className="thumbs">{fs.slice(1).map((f) => <a key={f.id} href={`/files/${f.id}`} target="_blank" rel="noreferrer"><img src={`/files/${f.id}`} alt={f.name} /></a>)}</div>}
+                        {fs.length > 0 && <div className="files">{fs.map((f) => <div key={f.id}><a href={`/files/${f.id}`} target="_blank" rel="noreferrer" title={f.name}>{f.name}</a><form action={deleteCharacterFile}><input type="hidden" name="id" value={f.id} /><button type="submit" title="삭제">✕</button></form></div>)}</div>}
+                        <UploadForm action={uploadCharacterFiles} hidden={{ characterId: id, slot: s.role }} multiple={multi} label={empty ? "이미지 올리기" : multi ? "더 올리기" : "교체 · 추가"} />
+                      </div>
+                    );
+                  })}
                 </div>
               </Sec>
               <Sec title="Soul ID (힉스필드)">

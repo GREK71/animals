@@ -12,6 +12,7 @@ services:
       # 비워 두면 첫 접속 때 /setup 화면에서 관리자 계정을 만든다.
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
     volumes:
       # 호스트 폴더가 없으면 Docker가 root 소유로 만들지만, entrypoint가 node 소유로 바꿔 준다.
       - ./data:/data

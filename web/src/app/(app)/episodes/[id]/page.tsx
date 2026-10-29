@@ -1,9 +1,15 @@
+/* eslint-disable @next/next/no-img-element -- 업로드 파일은 로그인 뒤 /files 로만 서빙되어 next/image 최적화를 쓰지 않는다 */
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { all, one } from "@/lib/db";
 import { SHOT_CLASS, SHOT_LABEL, STATUS_CLASS, STATUS_LABEL, type Character, type Episode, type Issue, type Place, type RelationChange, type Run, type Shot, type Variant } from "@/lib/types";
 import { Card, Field, Sec, Status, Tabs } from "@/components/ui";
 import CopyButton from "@/components/CopyButton";
+import UploadForm from "@/components/UploadForm";
+import { filesFor } from "@/lib/files";
+import type { ShotPrompt } from "@/lib/types";
+import ShotPromptPanel from "./ShotPromptPanel";
+import { deleteShotFile, uploadShotFrame } from "./actions";
 
 const TABS = [{ key: "over", label: "개요" }, { key: "shots", label: "샷 · 생성" }, { key: "compose", label: "프롬프트 조합" }, { key: "pub", label: "게시" }];
 
@@ -19,6 +25,8 @@ export default async function EpisodePage({ params, searchParams }: PageProps<"/
   const runsByShot = (sid: string) => all<Run>("runs", { col: "shot_id", val: sid }).sort((a, b) => b.n - a.n);
   const variantsByRun = (rid: string) => all<Variant>("variants", { col: "run_id", val: rid });
   const changes = all<RelationChange>("relation_changes", { col: "episode_id", val: id });
+  const promptsFor = (sid: string) => all<ShotPrompt>("shot_prompts", { col: "shot_id", val: sid }).sort((a, b) => b.v - a.v);
+  const castHasRefs = (who: string) => characters.some((c) => (who.includes(c.name) || who.includes(c.name.slice(-2))) && filesFor("character", c.id).some((f) => f.slot !== "Soul ID 학습 세트"));
   const issues = all<Issue>("issues").filter((i) => i.status !== "decided" && i.blocks.includes(e.no));
   const done = shots.filter((s) => s.status === "done").length;
   const cand = shots.filter((s) => s.status === "cand" || s.status === "key").length;
@@ -61,7 +69,17 @@ export default async function EpisodePage({ params, searchParams }: PageProps<"/
                     <details key={s.id} className="shotx" open={s.status === "done"}>
                       <summary className="h"><span className="no">{s.no}</span><span><b>{s.title}</b><span>{s.who} · {s.place} · {s.length} · {s.camera}{s.subtitle ? ` · 자막 ${s.subtitle}` : ""}</span></span><Status cls={SHOT_CLASS[s.status]}>{SHOT_LABEL[s.status]}</Status></summary>
                       <div className="b">
-                        {runs.length === 0 && <div className="run"><div className="m">생성 시도 없음</div><Link className="btn sm" href={`/episodes/${id}?tab=compose`}>프롬프트 만들기</Link></div>}
+                        <Sec title="씬 프롬프트" more="AI가 캐릭터 레퍼런스·장소·앞뒤 샷을 읽고 키프레임/모션 프롬프트를 씁니다" first>
+                          <ShotPromptPanel shotId={s.id} current={promptsFor(s.id)[0] ?? null} versions={promptsFor(s.id).length} hasRefs={castHasRefs(s.who)} hasFrame={filesFor("shot", s.id).length > 0} />
+                        </Sec>
+                        <Sec title="시작 프레임" more="힉스필드에서 확정한 키프레임을 올려 두면 모션 프롬프트가 이 프레임 기준으로 나옵니다">
+                          <div className="frame">
+                            {filesFor("shot", s.id).map((f) => <div key={f.id} className="frame-item"><a className="img" href={`/files/${f.id}`} target="_blank" rel="noreferrer"><img src={`/files/${f.id}`} alt={f.name} /></a><div className="meta"><span>{f.name}</span><span>{f.by} · {f.at.slice(0, 10)}</span><form action={deleteShotFile}><input type="hidden" name="id" value={f.id} /><button type="submit">삭제</button></form></div></div>)}
+                            <UploadForm action={uploadShotFrame} hidden={{ shotId: s.id }} label={filesFor("shot", s.id).length ? "프레임 추가" : "시작 프레임 올리기"} />
+                          </div>
+                        </Sec>
+                        <Sec title="생성 시도">
+                        {runs.length === 0 && <div className="run"><div className="m">생성 시도 없음</div></div>}
                         {runs.map((r) => {
                           const vs = variantsByRun(r.id);
                           return (
@@ -71,6 +89,7 @@ export default async function EpisodePage({ params, searchParams }: PageProps<"/
                             </div>
                           );
                         })}
+                        </Sec>
                       </div>
                     </details>
                   );

@@ -26,6 +26,10 @@ export type Shot = { episodeId: string; no: string; title: string; who: string; 
 export type Run = { shotId: string; n: number; stage: "키프레임" | "영상"; model: string; at: string; note: string };
 export type Variant = { runId: string; label: string; note: string; state: "cand" | "pick" | "drop" };
 export type Asset = { name: string; kind: string; role: string; status: string; at: string; by: string; note: string; size?: string; hash?: string; source?: string; tool?: string; license?: string; portrait?: string; derive?: string; similarity?: string; links?: string[]; lineage?: { v: string; text: string; at: string }[]; refs?: { v: string; text: string; at: string }[] };
+// 업로드 파일. 실제 바이트는 DATA_DIR/uploads/<id>.<ext>, 메타는 files 테이블.
+export type StoredFile = { ownerType: "character" | "shot"; ownerId: string; slot: string; name: string; mime: string; size: number; ext: string; at: string; by: string };
+// 샷별 씬 프롬프트 (AI 생성 또는 수동 편집). 최신 v가 현재.
+export type ShotPrompt = { shotId: string; v: number; brief: string; keyframe: string; motion: string; notes: string; direction: string; source: "ai" | "edit"; model?: string; at: string; by: string };
 export type Issue = { scope: string; title: string; desc: string; options: string; blocks: string; status: "open" | "warn" | "decided"; decided?: string; decidedAt?: string };
 export type PromptVersion = { ownerType: string; ownerId: string; v: string; body: string; memo: string; at: string; current: boolean };
 export type RelationChange = { episodeId: string; pair: string; before: string; after: string; memo: string; planned?: boolean };

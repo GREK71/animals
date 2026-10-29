@@ -64,9 +64,17 @@ ufw allow OpenSSH && ufw allow 3000/tcp && ufw --force enable
 - 데이터는 `/opt/animals/web/data` 에 남는다. 컨테이너를 지워도 유지된다.
 - 도메인을 붙이면 Caddy 같은 리버스 프록시로 HTTPS를 두고 `.env`에 `COOKIE_SECURE=true`.
 
+### 레퍼런스 업로드와 씬 프롬프트 생성
+
+- 캐릭터 › 비주얼 가이드 탭의 레퍼런스 슬롯(얼굴 앵커, 캐릭터 시트, Soul ID 학습 세트, 동물형 앵커)에 PNG/JPG/WEBP를 올린다. 장당 20MB. 파일은 `data/uploads/`에 저장되고 로그인한 사용자만 `/files/<id>`로 볼 수 있다.
+- 에피소드 › 샷 · 생성 탭에서 샷마다 "AI로 씬 프롬프트 만들기"를 누르면 Claude(claude-opus-5-5)가 캐릭터 고정 프롬프트·외형 기준·올려 둔 레퍼런스 이미지·장소·앞뒤 샷을 읽고 한국어 브리프, 힉스필드 Soul 2.0 키프레임 프롬프트(영어), Kling 3.0 모션 프롬프트(영어), 제작 메모를 쓴다. 추가 지시를 적으면 최우선으로 반영한다. 결과는 버전으로 쌓이며 "수정"으로 고쳐 새 버전으로 저장할 수 있다.
+- 힉스필드에서 확정한 키프레임을 샷의 "시작 프레임"으로 올려 두면 모션 프롬프트가 그 프레임 기준으로 나온다.
+- 생성에는 `.env`의 `ANTHROPIC_API_KEY`가 필요하다. 호출마다 소액 비용이 든다 (이미지 몇 장 + 텍스트, 건당 수십 원 수준).
+
 ### 구조
 
 - `src/app/setup` 첫 마스터 계정 등록 (계정이 없을 때만), `src/app/login` 로그인 (서버 액션), `src/app/api/login` 스크립트용 로그인 API
 - `src/proxy.ts` 세션 쿠키 없으면 /login으로
 - `src/app/(app)/*` 홈, 캐릭터, 장소, 에피소드(샷·생성, 프롬프트 조합, 게시), 소재, 미정 항목, 설정
 - `src/lib/db.ts` 문서형 SQLite 저장소, `src/lib/seed.ts` 예시 데이터
+- `src/lib/files.ts` 업로드 저장·검증, `src/app/files/[id]` 파일 서빙, `src/lib/prompts.ts` Claude로 샷 프롬프트 생성

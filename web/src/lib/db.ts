@@ -17,6 +17,8 @@ const DOC_TABLES: Record<string, string[]> = {
   issues: [],
   prompt_versions: ["owner_type", "owner_id"],
   relation_changes: ["episode_id"],
+  files: ["owner_type", "owner_id"],
+  shot_prompts: ["shot_id"],
 };
 
 declare global {
@@ -147,6 +149,16 @@ export function put(table: string, id: string, data: object, refs: Record<string
     ON CONFLICT(id) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at` +
     refCols.map((c) => `, ${c} = excluded.${c}`).join("");
   getDb().prepare(sql).run(id, ...refCols.map((c) => refs[c]), JSON.stringify(data), new Date().toISOString());
+}
+
+export function remove(table: string, id: string) {
+  getDb().prepare(`DELETE FROM ${table} WHERE id = ?`).run(id);
+}
+
+export function uploadsDir() {
+  const dir = path.join(dataDir(), "uploads");
+  fs.mkdirSync(dir, { recursive: true });
+  return dir;
 }
 
 export function count(table: string) {
