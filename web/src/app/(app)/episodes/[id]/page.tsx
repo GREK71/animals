@@ -6,6 +6,7 @@ import { SHOT_CLASS, SHOT_LABEL, STATUS_CLASS, STATUS_LABEL, type Character, typ
 import { Card, Field, Sec, Status, Tabs } from "@/components/ui";
 import CopyButton from "@/components/CopyButton";
 import UploadForm from "@/components/UploadForm";
+import Lightbox from "@/components/Lightbox";
 import { filesFor } from "@/lib/files";
 import { aiEnabled, gptRequest } from "@/lib/prompts";
 import type { ShotPrompt } from "@/lib/types";
@@ -62,6 +63,7 @@ export default async function EpisodePage({ params, searchParams }: PageProps<"/
 
           {tab === "shots" && (
             <div className="pane">
+              <Lightbox group="frames" images={shots.flatMap((s) => filesFor("shot", s.id).map((f) => ({ id: f.id, url: `/files/${f.id}`, name: f.name, caption: `${e.no} 샷 ${s.no} 시작 프레임` })))} />
               {shots.length === 0 && <div className="empty"><b>샷이 없습니다</b><span>기획 단계에서 샷 리스트를 추가합니다.</span></div>}
               <div className="board">
                 {shots.map((s) => {
@@ -75,7 +77,7 @@ export default async function EpisodePage({ params, searchParams }: PageProps<"/
                         </Sec>
                         <Sec title="시작 프레임" more="힉스필드에서 확정한 키프레임을 올려 두면 모션 프롬프트가 이 프레임 기준으로 나옵니다">
                           <div className="frame">
-                            {filesFor("shot", s.id).map((f) => <div key={f.id} className="frame-item"><a className="img" href={`/files/${f.id}`} target="_blank" rel="noreferrer"><img src={`/files/${f.id}`} alt={f.name} /></a><div className="meta"><span>{f.name}</span><span>{f.by} · {f.at.slice(0, 10)}</span><form action={deleteShotFile}><input type="hidden" name="id" value={f.id} /><button type="submit">삭제</button></form></div></div>)}
+                            {filesFor("shot", s.id).map((f) => <div key={f.id} className="frame-item"><a className="img" href={`/files/${f.id}`} data-lightbox="frames" data-lightbox-id={f.id} title="크게 보기"><img src={`/files/${f.id}`} alt={f.name} /></a><div className="meta"><span>{f.name}</span><span>{f.by} · {f.at.slice(0, 10)}</span><form action={deleteShotFile}><input type="hidden" name="id" value={f.id} /><button type="submit">삭제</button></form></div></div>)}
                             <UploadForm action={uploadShotFrame} hidden={{ shotId: s.id }} label={filesFor("shot", s.id).length ? "프레임 추가" : "시작 프레임 올리기"} />
                           </div>
                         </Sec>

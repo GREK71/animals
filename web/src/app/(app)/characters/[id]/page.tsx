@@ -6,6 +6,7 @@ import { STATUS_CLASS, STATUS_LABEL, type Asset, type Character, type Episode, t
 import { Avatar, Card, Field, ReadyBadges, Sec, Status, Tabs } from "@/components/ui";
 import CopyButton from "@/components/CopyButton";
 import UploadForm from "@/components/UploadForm";
+import Lightbox from "@/components/Lightbox";
 import { filesFor } from "@/lib/files";
 import { deleteCharacterFile, uploadCharacterFiles } from "./actions";
 
@@ -65,17 +66,18 @@ export default async function CharacterPage({ params, searchParams }: PageProps<
                     const empty = fs.length === 0;
                     return (
                       <div key={s.role} className={`slot ${empty ? "empty" : ""}`}>
-                        <span className="ph">{fs[0] ? <img src={`/files/${fs[0].id}`} alt={s.role} /> : (s.note ?? "미등록")}</span>
+                        <span className="ph">{fs[0] ? <a href={`/files/${fs[0].id}`} data-lightbox="char" data-lightbox-id={fs[0].id} title="크게 보기"><img src={`/files/${fs[0].id}`} alt={s.role} /></a> : (s.note ?? "미등록")}</span>
                         <b>{s.role}</b>
                         {empty ? <><span>{s.file}</span><Status cls={s.status === "미학습" ? "warn" : ""}>{s.status}</Status></> : <Status cls="ok">{multi ? `${fs.length}장 등록` : "등록됨"}</Status>}
-                        {fs.length > 1 && <div className="thumbs">{fs.slice(1).map((f) => <a key={f.id} href={`/files/${f.id}`} target="_blank" rel="noreferrer"><img src={`/files/${f.id}`} alt={f.name} /></a>)}</div>}
-                        {fs.length > 0 && <div className="files">{fs.map((f) => <div key={f.id}><a href={`/files/${f.id}`} target="_blank" rel="noreferrer" title={f.name}>{f.name}</a><form action={deleteCharacterFile}><input type="hidden" name="id" value={f.id} /><button type="submit" title="삭제">✕</button></form></div>)}</div>}
+                        {fs.length > 1 && <div className="thumbs">{fs.slice(1).map((f) => <a key={f.id} href={`/files/${f.id}`} data-lightbox="char" data-lightbox-id={f.id} title={f.name}><img src={`/files/${f.id}`} alt={f.name} /></a>)}</div>}
+                        {fs.length > 0 && <div className="files">{fs.map((f) => <div key={f.id}><a href={`/files/${f.id}`} data-lightbox="char" data-lightbox-id={f.id} title={f.name}>{f.name}</a><form action={deleteCharacterFile}><input type="hidden" name="id" value={f.id} /><button type="submit" title="삭제">✕</button></form></div>)}</div>}
                         <UploadForm action={uploadCharacterFiles} hidden={{ characterId: id, slot: s.role }} multiple={multi} label={empty ? "이미지 올리기" : multi ? "더 올리기" : "교체 · 추가"} />
                       </div>
                     );
                   })}
                 </div>
               </Sec>
+              <Lightbox group="char" images={c.slots.flatMap((s) => uploads.filter((f) => f.slot === s.role).map((f) => ({ id: f.id, url: `/files/${f.id}`, name: f.name, caption: `${c.name} · ${s.role}` })))} />
               <Sec title="Soul ID (힉스필드)">
                 <div className="grid2"><Field label="상태"><Status cls={c.soul.status === "사용 가능" ? "ok" : "warn"}>{c.soul.status}</Status></Field><Field label="학습 세트">{c.soul.setCount}장</Field><Field label="학습 모델">{c.soul.model}</Field><Field label="힉스필드 ID">{c.soul.hfId}</Field></div>
                 <p className="note" style={{ marginTop: 10 }}>Soul ID는 학습한 모델에 묶입니다. 학습 세트 원본은 소재로 보관해 모델이 바뀌면 재학습합니다.</p>
