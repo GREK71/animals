@@ -323,3 +323,9 @@ summary::-webkit-details-marker{display:none}
 .cf-d summary::-webkit-details-marker{display:none}
 .sp-edit input{font:inherit;font-size:13px;color:var(--fg);background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:7px 9px;text-transform:none;letter-spacing:0}
 .view-title .btn{margin-left:auto}
+
+/* danger zone */
+.danger-zone{margin-top:22px;padding:14px 16px;border:1px solid #e6c3bf;border-radius:8px;background:#fcf4f3;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.danger-zone>div{display:flex;flex-direction:column;gap:3px;font-size:12.5px}
+.btn.danger{color:var(--bad);border-color:#e6c3bf}
+.btn.danger:hover{background:#f6e3e1}

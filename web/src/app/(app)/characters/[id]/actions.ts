@@ -2,8 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { one } from "@/lib/db";
-import { deleteFile, saveUpload } from "@/lib/files";
-import { requireUser } from "@/lib/session";
+import { deleteFile, filesFor, saveUpload } from "@/lib/files";
+import { requireAdmin, requireUser } from "@/lib/session";
 import type { Character, StoredFile } from "@/lib/types";
 
 export type UploadState = { error?: string; ok?: number };
@@ -39,7 +39,7 @@ export async function deleteCharacterFile(form: FormData) {
 
 // ---- 캐릭터 직접 입력·수정 ----
 import { redirect } from "next/navigation";
-import { all, put } from "@/lib/db";
+import { all, put, remove } from "@/lib/db";
 import type { PromptVersion } from "@/lib/types";
 
 export type CharacterFormState = { error?: string };
@@ -117,4 +117,18 @@ export async function saveFixedPrompt(form: FormData) {
   put("characters", charId, { ...cd, promptVersion: v });
   revalidatePath(`/characters/${charId}`);
   revalidatePath("/characters");
+}
+
+// 캐릭터 삭제 (관리자 이상). 업로드 파일과 고정 프롬프트 버전도 함께 지운다. 샷·소재의 이름 표기는 그대로 남는다.
+export async function deleteCharacter(form: FormData) {
+  await requireAdmin();
+  const id = str(form.get("id"), 64);
+  const c = one<Character>("characters", id);
+  if (!c) return;
+  for (const f of filesFor("character", id)) deleteFile(f.id);
+  for (const v of all<PromptVersion>("prompt_versions", { col: "owner_id", val: id })) remove("prompt_versions", v.id);
+  remove("characters", id);
+  revalidatePath("/characters");
+  revalidatePath("/");
+  redirect("/characters");
 }

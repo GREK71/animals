@@ -8,7 +8,9 @@ import CopyButton from "@/components/CopyButton";
 import UploadForm from "@/components/UploadForm";
 import Lightbox from "@/components/Lightbox";
 import { filesFor } from "@/lib/files";
-import { deleteCharacterFile, saveFixedPrompt, uploadCharacterFiles } from "./actions";
+import { deleteCharacter, deleteCharacterFile, saveFixedPrompt, uploadCharacterFiles } from "./actions";
+import ConfirmForm from "@/components/ConfirmForm";
+import { canManage, requireUser } from "@/lib/session";
 import CharacterForm from "../CharacterForm";
 import { mentions } from "@/lib/names";
 
@@ -16,6 +18,7 @@ const TABS = [{ key: "basic", label: "기본" }, { key: "visual", label: "비주
 
 export default async function CharacterPage({ params, searchParams }: PageProps<"/characters/[id]">) {
   const { id } = await params;
+  const me = await requireUser();
   const sp = await searchParams;
   const tab = typeof sp.tab === "string" ? sp.tab : "basic";
   const edit = sp.edit === "1";
@@ -43,7 +46,15 @@ export default async function CharacterPage({ params, searchParams }: PageProps<
           <Tabs base={`/characters/${id}`} tabs={TABS} current={tab} />
 
           {tab === "basic" && edit && (
-            <div className="pane"><CharacterForm id={id} c={c} /></div>
+            <div className="pane">
+              <CharacterForm id={id} c={c} />
+              {canManage(me) && (
+                <div className="danger-zone">
+                  <div><b>캐릭터 삭제</b><span className="muted small">올려 둔 레퍼런스 이미지와 고정 프롬프트 버전도 함께 지워집니다. 샷·소재에 적힌 이름은 남습니다. 되돌릴 수 없습니다.</span></div>
+                  <ConfirmForm action={deleteCharacter} hidden={{ id }} message={`"${c.name}" 캐릭터를 삭제할까요? 이미지와 고정 프롬프트도 지워지며 되돌릴 수 없습니다.`} label="삭제" />
+                </div>
+              )}
+            </div>
           )}
 
           {tab === "basic" && !edit && (
