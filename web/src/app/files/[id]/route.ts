@@ -19,7 +19,8 @@ export async function GET(_req: NextRequest, ctx: RouteContext<"/files/[id]">) {
     headers: {
       "content-type": f.mime,
       "content-length": String(body.length),
-      "cache-control": "private, max-age=3600",
+      "cache-control": "private, no-store",
+      "x-content-type-options": "nosniff",
       "content-disposition": `inline; filename*=UTF-8''${encodeURIComponent(f.name)}`,
     },
   });

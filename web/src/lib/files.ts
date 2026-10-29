@@ -7,6 +7,15 @@ import type { StoredFile } from "./types";
 export const IMAGE_TYPES: Record<string, string> = { "image/png": "png", "image/jpeg": "jpg", "image/webp": "webp" };
 export const MAX_UPLOAD = 20 * 1024 * 1024;
 
+// 클라이언트가 보낸 MIME을 믿지 않고 매직 바이트로 확인
+function matchesSignature(buf: Buffer, mime: string) {
+  if (buf.length < 12) return false;
+  if (mime === "image/png") return buf.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
+  if (mime === "image/jpeg") return buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff;
+  if (mime === "image/webp") return buf.subarray(0, 4).toString("ascii") === "RIFF" && buf.subarray(8, 12).toString("ascii") === "WEBP";
+  return false;
+}
+
 export function filesFor(ownerType: StoredFile["ownerType"], ownerId: string): Doc<StoredFile>[] {
   return all<StoredFile>("files", { col: "owner_id", val: ownerId }).filter((f) => f.ownerType === ownerType).sort((a, b) => a.at.localeCompare(b.at));
 }
@@ -21,8 +30,9 @@ export async function saveUpload(file: File, owner: { type: StoredFile["ownerTyp
   if (!ext) return { ok: false, error: `지원하지 않는 형식입니다 (${file.type || "알 수 없음"}). PNG, JPG, WEBP만 올릴 수 있습니다.` };
   if (file.size === 0) return { ok: false, error: "빈 파일입니다." };
   if (file.size > MAX_UPLOAD) return { ok: false, error: "20MB를 넘는 파일은 올릴 수 없습니다." };
-  const id = "f" + crypto.randomBytes(6).toString("hex");
   const buf = Buffer.from(await file.arrayBuffer());
+  if (!matchesSignature(buf, file.type)) return { ok: false, error: "파일 내용이 선언된 이미지 형식과 다릅니다." };
+  const id = "f" + crypto.randomBytes(6).toString("hex");
   fs.writeFileSync(/*turbopackIgnore: true*/ path.join(uploadsDir(), `${id}.${ext}`), buf, { mode: 0o600 });
   const name = path.basename(file.name || `upload.${ext}`).replace(/[\r\n]/g, "").slice(0, 120);
   put("files", id, { ownerType: owner.type, ownerId: owner.id, slot: owner.slot, name, mime: file.type, size: file.size, ext, at: new Date().toISOString(), by } satisfies StoredFile, { owner_type: owner.type, owner_id: owner.id });

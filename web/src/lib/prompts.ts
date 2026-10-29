@@ -7,6 +7,8 @@ import type { Character, Episode, Place, PromptVersion, Shot, ShotPrompt, Stored
 
 export const PROMPT_MODEL = "claude-opus-5-5";
 const MAX_IMAGE_BYTES = 4_500_000; // API 이미지 한도(5MB) 아래로
+const MAX_IMAGES = 4; // 요청당 이미지 장수
+const MAX_TOTAL_BYTES = 12_000_000; // 요청당 이미지 합계
 
 const Output = z.object({
   brief_ko: z.string().describe("한국어 장면 브리프. '장면 / 행동 / 감정과 반응 / 카메라 / 영상 길이' 다섯 줄, 기획 확인용"),
@@ -62,10 +64,13 @@ function describeCharacter(c: Doc<Character>) {
 
 type ImagePart = { type: "image"; source: { type: "base64"; media_type: "image/png" | "image/jpeg" | "image/webp"; data: string } };
 
-function imageParts(files: Doc<StoredFile>[], skipped: string[]): ImagePart[] {
+// 장당 4.5MB, 요청 전체 4장·12MB까지. 최근 올린 것을 우선한다.
+function imageParts(files: Doc<StoredFile>[], skipped: string[], budget: { n: number; bytes: number }): ImagePart[] {
   const out: ImagePart[] = [];
-  for (const f of files) {
+  for (const f of [...files].sort((a, b) => b.at.localeCompare(a.at))) {
     if (f.size > MAX_IMAGE_BYTES) { skipped.push(`${f.name} (${(f.size / 1048576).toFixed(1)}MB, 4.5MB 초과)`); continue; }
+    if (budget.n >= MAX_IMAGES || budget.bytes + f.size > MAX_TOTAL_BYTES) { skipped.push(`${f.name} (요청당 ${MAX_IMAGES}장·12MB 한도)`); continue; }
+    budget.n++; budget.bytes += f.size;
     out.push({ type: "image", source: { type: "base64", media_type: f.mime as ImagePart["source"]["media_type"], data: readFileBase64(f) } });
   }
   return out;
@@ -161,17 +166,18 @@ export async function generateShotPrompt(shotId: string, direction: string): Pro
   const { cast } = ctx;
 
   const skipped: string[] = [];
+  const budget = { n: 0, bytes: 0 };
   const content: Anthropic.ContentBlockParam[] = [];
   for (const c of cast) {
     const files = filesFor("character", c.id).filter((f) => f.slot !== "Soul ID 학습 세트");
-    const imgs = imageParts(files, skipped);
+    const imgs = imageParts(files, skipped, budget);
     if (imgs.length) {
-      content.push({ type: "text", text: `[${c.name} 레퍼런스 이미지 ${imgs.length}장: ${files.filter((f) => f.size <= MAX_IMAGE_BYTES).map((f) => f.slot).join(", ")}]` });
+      content.push({ type: "text", text: `[${c.name} 레퍼런스 이미지 ${imgs.length}장 (얼굴 앵커·캐릭터 시트 등, 최근 업로드 우선)]` });
       content.push(...imgs);
     }
   }
   const frameFiles = filesFor("shot", shotId);
-  const frameImgs = imageParts(frameFiles, skipped);
+  const frameImgs = imageParts(frameFiles, skipped, budget);
   if (frameImgs.length) {
     content.push({ type: "text", text: `[이 샷의 확정 시작 프레임 ${frameImgs.length}장. 모션 프롬프트는 이 프레임에서 시작한다고 가정]` });
     content.push(...frameImgs);
