@@ -6,6 +6,7 @@ export type Character = {
   honorifics: { to: string; call: string; called: string; tone: string }[];
   habits: string[]; forbidden: string[]; appearance: string[]; refPriority: string[];
   ready: Ready; promptVersion: string; initial: string; color: string;
+  sheetPrompt?: string; // 캐릭터 시트(이미지) 생성에 쓴 프롬프트. GPT·힉스필드에 그대로 붙여넣는 용도
   soul: { status: string; setCount: number; model: string; hfId: string };
   slots: { role: string; file: string; status: string; empty?: boolean; note?: string }[];
   relations: { to: string; types: string[]; current: string }[];

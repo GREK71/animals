@@ -41,7 +41,7 @@ export default async function CharacterPage({ params, searchParams }: PageProps<
           <div className="hero">
             <Avatar initial={c.initial} color={c.color} size="lg" />
             <div className="t"><h2>{c.name}</h2><div className="chips"><span className="chip role">{c.role}</span><span className="chip">{c.species}</span><span className="chip">{c.age}세 · {c.height}</span><span className="chip">{c.residence}</span>{issues.filter((i) => i.status !== "decided").length > 0 && <span className="chip todo">미정 {issues.filter((i) => i.status !== "decided").length}건</span>}</div></div>
-            <div className="actions">{current && <CopyButton text={current.body} label={`고정 프롬프트 ${current.v} 복사`} />}<Link className="btn sm ghost" href={`/characters/${id}?tab=basic&edit=1`}>설정 수정</Link></div>
+            <div className="actions">{c.sheetPrompt && <CopyButton text={c.sheetPrompt} label="시트 프롬프트 복사" className="btn sm ghost" />}{current && <CopyButton text={current.body} label={`고정 프롬프트 ${current.v} 복사`} />}<Link className="btn sm ghost" href={`/characters/${id}?tab=basic&edit=1`}>설정 수정</Link></div>
           </div>
           <Tabs base={`/characters/${id}`} tabs={TABS} current={tab} />
 
@@ -64,6 +64,9 @@ export default async function CharacterPage({ params, searchParams }: PageProps<
                 <Field label="종">{c.species}</Field><Field label="거주지">{c.residence}</Field><Field label="직업">{c.job}</Field>
               </div>
               <Sec title="한 줄 소개"><p>{c.intro}</p></Sec>
+              <Sec title="캐릭터 시트 프롬프트" more={c.sheetPrompt ? "시트 이미지를 만들 때 쓴 프롬프트 · 복사해서 GPT·힉스필드에" : "아직 없음 · 설정 수정에서 입력"}>
+                {c.sheetPrompt ? <div className="prompt"><div className="ph"><span>캐릭터 시트</span><CopyButton text={c.sheetPrompt} className="btn sm" /></div><pre>{c.sheetPrompt}</pre></div> : <p className="muted small">설정 수정 화면의 &quot;캐릭터 시트 프롬프트&quot; 칸에 넣으면 여기 표시됩니다.</p>}
+              </Sec>
               <Sec title="배경"><ul className="pl">{c.background.map((b) => <li key={b}>{b}</li>)}</ul></Sec>
               <Sec title="이 캐릭터의 미정 항목" more="미정 항목(O-01)에 저장됩니다">
                 <div className="row-list">

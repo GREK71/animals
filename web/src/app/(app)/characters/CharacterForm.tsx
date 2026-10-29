@@ -25,6 +25,7 @@ export default function CharacterForm({ id, c }: { id: string; c?: Character }) 
         <label>아바타 색<input name="color" type="color" defaultValue={c?.color ?? "#2e3236"} /></label>
       </div>
       <label className="cf-l">한 줄 소개<textarea name="intro" rows={2} defaultValue={c?.intro ?? ""} /></label>
+      <label className="cf-l">캐릭터 시트 프롬프트 (시트 이미지를 만들 때 쓴 프롬프트 · 상세 화면에서 복사)<textarea name="sheetPrompt" rows={8} defaultValue={c?.sheetPrompt ?? ""} placeholder="예: A full-body character sheet of a 31-year-old Korean man, 185cm, slim build, black knit sweater… front, side and back views on a plain background" /></label>
       <label className="cf-l">배경 (한 줄에 하나)<textarea name="background" rows={3} defaultValue={j(c?.background)} /></label>
       <label className="cf-l">성격 키워드 (쉼표)<input name="keywords" defaultValue={(c?.keywords ?? []).join(", ")} /></label>
       <label className="cf-l">습성 태그 (쉼표)<input name="habits" defaultValue={(c?.habits ?? []).join(", ")} /></label>

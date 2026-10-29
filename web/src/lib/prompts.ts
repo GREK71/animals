@@ -57,10 +57,11 @@ function describeCharacter(c: Doc<Character>) {
     `### ${c.name} (${c.species}, ${c.age}세 ${c.sex}, ${c.height}, ${c.role})`,
     `고정 프롬프트:\n${fixedPrompt(c.id) || "(없음)"}`,
     `인간형 외형 기준:\n- ${c.appearance.join("\n- ")}`,
+    c.sheetPrompt ? `캐릭터 시트 생성 프롬프트 (외형 표현의 기준):\n${c.sheetPrompt}` : "",
     `성격 키워드: ${c.keywords.join(", ")}`,
     `습성: ${c.habits.join(", ")}`,
     `금지 표현: ${c.forbidden.join(", ")}`,
-  ].join("\n");
+  ].filter(Boolean).join("\n");
 }
 
 type ImagePart = { type: "image"; source: { type: "base64"; media_type: "image/png" | "image/jpeg" | "image/webp"; data: string } };

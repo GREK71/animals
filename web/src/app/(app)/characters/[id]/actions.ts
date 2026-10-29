@@ -88,6 +88,7 @@ export async function saveCharacter(_prev: CharacterFormState, form: FormData): 
     residence: str(form.get("residence"), 80), job: str(form.get("job"), 80), intro: str(form.get("intro"), 400),
     background: lines(form.get("background")), keywords: commas(form.get("keywords")), honorifics,
     habits: commas(form.get("habits")), forbidden: lines(form.get("forbidden")), appearance: lines(form.get("appearance")), refPriority: lines(form.get("refPriority")),
+    sheetPrompt: String(form.get("sheetPrompt") ?? "").trim().slice(0, 8000),
     ready, promptVersion: existing?.promptVersion ?? "—", initial: str(form.get("initial"), 2) || name.slice(-2, -1) || name.slice(0, 1), color,
     soul: { status: str(form.get("soul_status"), 20) || "미학습", setCount: Number(form.get("soul_setCount")) || 0, model: str(form.get("soul_model"), 40) || "—", hfId: str(form.get("soul_hfId"), 80) || "—" },
     slots: existing?.slots ?? DEFAULT_SLOTS,
