@@ -71,23 +71,94 @@ function imageParts(files: Doc<StoredFile>[], skipped: string[]): ImagePart[] {
   return out;
 }
 
-export type GenerateResult = { ok: true; output: PromptOutput; model: string; skipped: string[] } | { ok: false; error: string };
+export function aiEnabled() {
+  return Boolean(process.env.ANTHROPIC_API_KEY);
+}
 
-export async function generateShotPrompt(shotId: string, direction: string): Promise<GenerateResult> {
-  if (!process.env.ANTHROPIC_API_KEY) return { ok: false, error: "서버에 ANTHROPIC_API_KEY가 없습니다. .env에 넣고 컨테이너를 다시 시작하세요." };
+type ShotContext = { shot: Doc<Shot>; episode: Doc<Episode>; cast: Doc<Character>[]; scene: Doc<Place>[]; prev: Doc<Shot> | null; next: Doc<Shot> | null; previous: Doc<ShotPrompt> | undefined };
+
+function loadContext(shotId: string): ShotContext | null {
   const shot = one<Shot>("shots", shotId);
-  if (!shot) return { ok: false, error: "샷을 찾을 수 없습니다." };
+  if (!shot) return null;
   const episode = one<Episode>("episodes", shot.episodeId);
-  if (!episode) return { ok: false, error: "에피소드를 찾을 수 없습니다." };
+  if (!episode) return null;
   const characters = all<Character>("characters");
   const places = all<Place>("places");
   const shots = all<Shot>("shots", { col: "episode_id", val: shot.episodeId }, "no");
   const idx = shots.findIndex((s) => s.id === shotId);
-  const prev = idx > 0 ? shots[idx - 1] : null;
-  const next = idx >= 0 && idx < shots.length - 1 ? shots[idx + 1] : null;
-  const cast = charactersInShot(shot, episode, characters);
-  const scene = placesInShot(shot, episode, places);
-  const previous = all<ShotPrompt>("shot_prompts", { col: "shot_id", val: shotId }).sort((a, b) => b.v - a.v)[0];
+  return {
+    shot, episode,
+    cast: charactersInShot(shot, episode, characters),
+    scene: placesInShot(shot, episode, places),
+    prev: idx > 0 ? shots[idx - 1] : null,
+    next: idx >= 0 && idx < shots.length - 1 ? shots[idx + 1] : null,
+    previous: all<ShotPrompt>("shot_prompts", { col: "shot_id", val: shotId }).sort((a, b) => b.v - a.v)[0],
+  };
+}
+
+const shotLine = (s: Shot) => `샷 ${s.no} "${s.title}" · 등장: ${s.who} · 장소: ${s.place} · 길이: ${s.length} · 카메라: ${s.camera}${s.subtitle ? ` · 자막: ${s.subtitle}` : ""}`;
+
+// 에피소드·캐릭터·장소·앞뒤 샷을 한 덩어리 텍스트로. AI 호출과 GPT 요청문이 함께 쓴다.
+function buildBrief(ctx: ShotContext, direction: string, includePrevious: boolean) {
+  const { shot, episode, cast, scene, prev, next, previous } = ctx;
+  return [
+    `# 에피소드 ${episode.no} ${episode.title}`,
+    `훅: ${episode.hook}`,
+    `줄거리: ${episode.summary}`,
+    `시간·조명: ${episode.lighting || "미정"}`,
+    `연속성: ${episode.continuity.map((c) => c.text).join(" / ") || "없음"}`,
+    ``,
+    `# 등장 캐릭터`,
+    cast.map(describeCharacter).join("\n\n"),
+    ``,
+    `# 장소`,
+    scene.map((p) => `- ${p.name}: ${p.note}. 고정 요소: ${p.fixed.join(", ")}${p.variable.length ? `. 가변: ${p.variable.join(", ")}` : ""}`).join("\n") || "(미정)",
+    ``,
+    `# 이번 샷`,
+    shotLine(shot),
+    prev ? `앞 샷: ${shotLine(prev)}` : "앞 샷: 없음 (에피소드 첫 샷)",
+    next ? `다음 샷: ${shotLine(next)}` : "다음 샷: 없음 (마지막 샷)",
+    includePrevious && previous ? `\n# 이전 버전 (v${previous.v}, ${previous.source === "ai" ? "AI" : "수동"})\n브리프: ${previous.brief}\n키프레임: ${previous.keyframe}\n모션: ${previous.motion}` : "",
+    direction ? `\n# 사용자 추가 지시 (최우선)\n${direction}` : "",
+  ].filter((l) => l !== undefined).join("\n");
+}
+
+// ChatGPT 등 외부 도구에 붙여넣는 요청문. 캐릭터 레퍼런스 이미지는 사용자가 직접 첨부한다.
+export function gptRequest(shotId: string): string | null {
+  const ctx = loadContext(shotId);
+  if (!ctx) return null;
+  const refs = ctx.cast.map((c) => {
+    const slots = filesFor("character", c.id).filter((f) => f.slot !== "Soul ID 학습 세트").map((f) => f.slot);
+    return `${c.name}: ${slots.length ? [...new Set(slots)].join(", ") : "(아카이브에 올린 이미지 없음)"}`;
+  });
+  return [
+    SYSTEM,
+    ``,
+    `# 첨부 이미지`,
+    `이 메시지에 첨부한 이미지는 캐릭터의 얼굴 앵커·캐릭터 시트다. 실제로 보고 외형을 영어로 옮겨라.`,
+    ...refs.map((r) => `- ${r}`),
+    ``,
+    buildBrief(ctx, "", false),
+    ``,
+    `# 출력 형식 (이 네 블록만, 머리말 없이)`,
+    `## 1. 한국어 브리프`,
+    `장면 / 행동 / 감정과 반응 / 카메라 / 영상 길이 — 다섯 줄`,
+    `## 2. 키프레임 프롬프트 (English, Soul 2.0)`,
+    `한 문단. 정체성 → 장소 → 모션 직전의 자세·표정 → 카메라 → "vertical 9:16, photoreal, realistic skin texture, natural interior lighting, no text or captions in frame"`,
+    `## 3. 모션 프롬프트 (English, Kling 3.0)`,
+    `외형 서술 없이 움직임·표정 변화·시선·카메라 움직임·초 단위 길이만. 끝에 "keep face, hair and outfit identical to the start frame"`,
+    `## 4. 제작 메모 (한국어)`,
+    `연속성 주의점, 실패하기 쉬운 부분 2~4줄`,
+  ].join("\n");
+}
+
+export type GenerateResult = { ok: true; output: PromptOutput; model: string; skipped: string[] } | { ok: false; error: string };
+
+export async function generateShotPrompt(shotId: string, direction: string): Promise<GenerateResult> {
+  if (!aiEnabled()) return { ok: false, error: "서버에 ANTHROPIC_API_KEY가 없습니다. .env에 넣고 컨테이너를 다시 시작하세요." };
+  const ctx = loadContext(shotId);
+  if (!ctx) return { ok: false, error: "샷 또는 에피소드를 찾을 수 없습니다." };
+  const { cast } = ctx;
 
   const skipped: string[] = [];
   const content: Anthropic.ContentBlockParam[] = [];
@@ -106,29 +177,7 @@ export async function generateShotPrompt(shotId: string, direction: string): Pro
     content.push(...frameImgs);
   }
 
-  const shotLine = (s: Shot) => `샷 ${s.no} "${s.title}" · 등장: ${s.who} · 장소: ${s.place} · 길이: ${s.length} · 카메라: ${s.camera}${s.subtitle ? ` · 자막: ${s.subtitle}` : ""}`;
-  const brief = [
-    `# 에피소드 ${episode.no} ${episode.title}`,
-    `훅: ${episode.hook}`,
-    `줄거리: ${episode.summary}`,
-    `시간·조명: ${episode.lighting || "미정"}`,
-    `연속성: ${episode.continuity.map((c) => c.text).join(" / ") || "없음"}`,
-    ``,
-    `# 등장 캐릭터`,
-    cast.map(describeCharacter).join("\n\n"),
-    ``,
-    `# 장소`,
-    scene.map((p) => `- ${p.name}: ${p.note}. 고정 요소: ${p.fixed.join(", ")}${p.variable.length ? `. 가변: ${p.variable.join(", ")}` : ""}`).join("\n") || "(미정)",
-    ``,
-    `# 이번 샷`,
-    shotLine(shot),
-    prev ? `앞 샷: ${shotLine(prev)}` : "앞 샷: 없음 (에피소드 첫 샷)",
-    next ? `다음 샷: ${shotLine(next)}` : "다음 샷: 없음 (마지막 샷)",
-    previous ? `\n# 이전 버전 (v${previous.v}, ${previous.source === "ai" ? "AI" : "수동"})\n브리프: ${previous.brief}\n키프레임: ${previous.keyframe}\n모션: ${previous.motion}` : "",
-    direction ? `\n# 사용자 추가 지시 (최우선)\n${direction}` : "",
-    ``,
-    `이번 샷의 brief_ko, keyframe_en, motion_en, notes_ko를 작성하라.`,
-  ].join("\n");
+  const brief = buildBrief(ctx, direction, true) + "\n\n이번 샷의 brief_ko, keyframe_en, motion_en, notes_ko를 작성하라.";
   content.push({ type: "text", text: brief });
 
   const client = new Anthropic();

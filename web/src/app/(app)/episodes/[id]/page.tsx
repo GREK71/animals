@@ -7,6 +7,7 @@ import { Card, Field, Sec, Status, Tabs } from "@/components/ui";
 import CopyButton from "@/components/CopyButton";
 import UploadForm from "@/components/UploadForm";
 import { filesFor } from "@/lib/files";
+import { aiEnabled, gptRequest } from "@/lib/prompts";
 import type { ShotPrompt } from "@/lib/types";
 import ShotPromptPanel from "./ShotPromptPanel";
 import { deleteShotFile, uploadShotFrame } from "./actions";
@@ -69,8 +70,8 @@ export default async function EpisodePage({ params, searchParams }: PageProps<"/
                     <details key={s.id} className="shotx" open={s.status === "done"}>
                       <summary className="h"><span className="no">{s.no}</span><span><b>{s.title}</b><span>{s.who} · {s.place} · {s.length} · {s.camera}{s.subtitle ? ` · 자막 ${s.subtitle}` : ""}</span></span><Status cls={SHOT_CLASS[s.status]}>{SHOT_LABEL[s.status]}</Status></summary>
                       <div className="b">
-                        <Sec title="씬 프롬프트" more="AI가 캐릭터 레퍼런스·장소·앞뒤 샷을 읽고 키프레임/모션 프롬프트를 씁니다" first>
-                          <ShotPromptPanel shotId={s.id} current={promptsFor(s.id)[0] ?? null} versions={promptsFor(s.id).length} hasRefs={castHasRefs(s.who)} hasFrame={filesFor("shot", s.id).length > 0} />
+                        <Sec title="씬 프롬프트" more="GPT 요청문 복사 → 결과 입력 → 복사해서 힉스필드에" first>
+                          <ShotPromptPanel shotId={s.id} current={promptsFor(s.id)[0] ?? null} versions={promptsFor(s.id).length} aiEnabled={aiEnabled()} gptRequest={gptRequest(s.id) ?? ""} hasRefs={castHasRefs(s.who)} hasFrame={filesFor("shot", s.id).length > 0} />
                         </Sec>
                         <Sec title="시작 프레임" more="힉스필드에서 확정한 키프레임을 올려 두면 모션 프롬프트가 이 프레임 기준으로 나옵니다">
                           <div className="frame">
