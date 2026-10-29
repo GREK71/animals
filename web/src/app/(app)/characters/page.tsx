@@ -7,7 +7,7 @@ export default function Characters() {
   const characters = all<Character>("characters");
   return (
     <>
-      <div className="view-title"><h1>캐릭터</h1><span className="id">C-01</span><span className="crumb">전체 {characters.length}명</span></div>
+      <div className="view-title"><h1>캐릭터</h1><span className="id">C-01</span><span className="crumb">전체 {characters.length}명</span><Link className="btn sm" href="/characters/new" style={{ marginLeft: "auto" }}>+ 캐릭터 추가</Link></div>
       <div className="home" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))" }}>
         {characters.map((c) => (
           <Card key={c.id} title={c.name} sub={`${c.species} · ${c.age}세 · ${c.height}`} more="상세" moreHref={`/characters/${c.id}`}>

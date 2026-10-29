@@ -9,6 +9,7 @@ import UploadForm from "@/components/UploadForm";
 import Lightbox from "@/components/Lightbox";
 import { filesFor } from "@/lib/files";
 import { aiEnabled, gptRequest } from "@/lib/prompts";
+import { mentions } from "@/lib/names";
 import type { ShotPrompt } from "@/lib/types";
 import ShotPromptPanel from "./ShotPromptPanel";
 import { deleteShotFile, uploadShotFrame } from "./actions";
@@ -28,7 +29,7 @@ export default async function EpisodePage({ params, searchParams }: PageProps<"/
   const variantsByRun = (rid: string) => all<Variant>("variants", { col: "run_id", val: rid });
   const changes = all<RelationChange>("relation_changes", { col: "episode_id", val: id });
   const promptsFor = (sid: string) => all<ShotPrompt>("shot_prompts", { col: "shot_id", val: sid }).sort((a, b) => b.v - a.v);
-  const castHasRefs = (who: string) => characters.some((c) => (who.includes(c.name) || who.includes(c.name.slice(-2))) && filesFor("character", c.id).some((f) => f.slot !== "Soul ID 학습 세트"));
+  const castHasRefs = (who: string) => characters.some((c) => mentions(who, c.name) && filesFor("character", c.id).some((f) => f.slot !== "Soul ID 학습 세트"));
   const issues = all<Issue>("issues").filter((i) => i.status !== "decided" && i.blocks.includes(e.no));
   const done = shots.filter((s) => s.status === "done").length;
   const cand = shots.filter((s) => s.status === "cand" || s.status === "key").length;

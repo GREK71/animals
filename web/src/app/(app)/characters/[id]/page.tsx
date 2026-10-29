@@ -8,7 +8,9 @@ import CopyButton from "@/components/CopyButton";
 import UploadForm from "@/components/UploadForm";
 import Lightbox from "@/components/Lightbox";
 import { filesFor } from "@/lib/files";
-import { deleteCharacterFile, uploadCharacterFiles } from "./actions";
+import { deleteCharacterFile, saveFixedPrompt, uploadCharacterFiles } from "./actions";
+import CharacterForm from "../CharacterForm";
+import { mentions } from "@/lib/names";
 
 const TABS = [{ key: "basic", label: "기본" }, { key: "visual", label: "비주얼 가이드" }, { key: "voice", label: "성격·말투" }, { key: "rel", label: "관계" }, { key: "ep", label: "에피소드" }, { key: "asset", label: "소재" }];
 
@@ -16,15 +18,16 @@ export default async function CharacterPage({ params, searchParams }: PageProps<
   const { id } = await params;
   const sp = await searchParams;
   const tab = typeof sp.tab === "string" ? sp.tab : "basic";
+  const edit = sp.edit === "1";
   const c = one<Character>("characters", id);
   if (!c) notFound();
   const others = all<Character>("characters").filter((x) => x.id !== id);
   const versions = all<PromptVersion>("prompt_versions", { col: "owner_id", val: id }).sort((a, b) => b.v.localeCompare(a.v));
   const current = versions.find((v) => v.current);
-  const issues = all<Issue>("issues").filter((i) => i.scope.includes(c.name));
+  const issues = all<Issue>("issues").filter((i) => mentions(i.scope, c.name));
   const episodes = all<Episode>("episodes", undefined, "no").filter((e) => e.characters.includes(id));
   const changes = all<RelationChange>("relation_changes");
-  const assets = all<Asset>("assets").filter((a) => a.role.includes(c.name) || a.links?.includes(c.name));
+  const assets = all<Asset>("assets").filter((a) => mentions(a.role, c.name) || a.links?.some((l) => mentions(l, c.name)));
   const uploads = filesFor("character", id);
 
   return (
@@ -35,11 +38,15 @@ export default async function CharacterPage({ params, searchParams }: PageProps<
           <div className="hero">
             <Avatar initial={c.initial} color={c.color} size="lg" />
             <div className="t"><h2>{c.name}</h2><div className="chips"><span className="chip role">{c.role}</span><span className="chip">{c.species}</span><span className="chip">{c.age}세 · {c.height}</span><span className="chip">{c.residence}</span>{issues.filter((i) => i.status !== "decided").length > 0 && <span className="chip todo">미정 {issues.filter((i) => i.status !== "decided").length}건</span>}</div></div>
-            <div className="actions">{current && <CopyButton text={current.body} label={`고정 프롬프트 ${current.v} 복사`} />}</div>
+            <div className="actions">{current && <CopyButton text={current.body} label={`고정 프롬프트 ${current.v} 복사`} />}<Link className="btn sm ghost" href={`/characters/${id}?tab=basic&edit=1`}>설정 수정</Link></div>
           </div>
           <Tabs base={`/characters/${id}`} tabs={TABS} current={tab} />
 
-          {tab === "basic" && (
+          {tab === "basic" && edit && (
+            <div className="pane"><CharacterForm id={id} c={c} /></div>
+          )}
+
+          {tab === "basic" && !edit && (
             <div className="pane">
               <div className="grid2">
                 <Field label="이름">{c.name}</Field><Field label="나이 · 성별">{c.age} · {c.sex}</Field><Field label="키">{c.height}</Field>
@@ -84,8 +91,17 @@ export default async function CharacterPage({ params, searchParams }: PageProps<
               </Sec>
               <Sec title="레퍼런스 우선순위"><ol className="pl">{c.refPriority.map((r) => <li key={r}>{r}</li>)}</ol></Sec>
               <Sec title="인간형 외형 기준"><ul className="pl">{c.appearance.map((a) => <li key={a}>{a}</li>)}</ul></Sec>
-              <Sec title="고정 프롬프트" more={current ? `현재 ${current.v} · 수정하면 새 버전이 추가되고 과거 생성 시도는 당시 버전을 유지` : "없음"}>
+              <Sec title="고정 프롬프트" more={current ? `현재 ${current.v} · 저장하면 새 버전이 추가되고 과거 생성 시도는 당시 버전을 유지` : "아직 없음 · 아래에 입력"}>
                 {current && <div className="prompt"><div className="ph"><span>한국어</span><span className="mono">{current.v} · {current.at}</span><CopyButton text={current.body} /></div><pre>{current.body}</pre></div>}
+                <details className="cf-d" style={{ marginTop: 10 }} open={!current}>
+                  <summary className="btn sm ghost">{current ? "새 버전으로 수정" : "고정 프롬프트 입력"}</summary>
+                  <form action={saveFixedPrompt} className="sp-edit" style={{ marginTop: 10 }}>
+                    <input type="hidden" name="characterId" value={id} />
+                    <label>본문 (한국어 · GPT 요청문과 생성에 그대로 들어갑니다)<textarea name="body" rows={10} defaultValue={current?.body ?? ""} required /></label>
+                    <label>변경 메모<input name="memo" placeholder="예: 의상 기본값을 회색 후드티로" /></label>
+                    <div className="sp-row"><button className="btn sm" type="submit">새 버전으로 저장</button></div>
+                  </form>
+                </details>
               </Sec>
               <Sec title="버전 이력">
                 <div className="vers">{versions.map((v) => <div key={v.id}><span className={`v ${v.current ? "cur" : "muted"}`}>{v.v}</span><span className={v.current ? "" : "muted"}>{v.memo}</span><span className="muted small">{v.at}</span></div>)}</div>

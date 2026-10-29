@@ -3,6 +3,7 @@ import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { z } from "zod";
 import { all, one, type Doc } from "./db";
 import { filesFor, readFileBase64 } from "./files";
+import { mentions } from "./names";
 import type { Character, Episode, Place, PromptVersion, Shot, ShotPrompt, StoredFile } from "./types";
 
 export const PROMPT_MODEL = "claude-opus-5-5";
@@ -41,7 +42,7 @@ function fixedPrompt(charId: string) {
 function charactersInShot(shot: Shot, episode: Episode, characters: Doc<Character>[]) {
   const inEp = characters.filter((c) => episode.characters.includes(c.id));
   // 샷의 who("도윤", "이현 + 도윤")에 이름 일부가 들어가면 그 캐릭터
-  const named = inEp.filter((c) => shot.who.includes(c.name) || shot.who.includes(c.name.slice(-2)));
+  const named = inEp.filter((c) => mentions(shot.who, c.name));
   return named.length ? named : inEp;
 }
 

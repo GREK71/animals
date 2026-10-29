@@ -309,3 +309,17 @@ summary::-webkit-details-marker{display:none}
 .lb-nav.prev{left:12px}.lb-nav.next{right:12px}
 .lb-nav:hover,.lb-x:hover{background:rgba(255,255,255,.22)}
 @media (max-width:640px){.lb-nav{width:36px;height:52px;font-size:30px}.lb-fig img{max-height:64vh}}
+
+/* character form */
+.cf{display:flex;flex-direction:column;gap:12px}
+.cf .form input[type=color]{padding:2px;height:34px;width:60px}
+.cf-l{display:flex;flex-direction:column;gap:4px;font-size:10.5px;color:var(--faint);letter-spacing:.06em;text-transform:uppercase}
+.cf-l input,.cf-l textarea{font:inherit;font-size:13px;color:var(--fg);background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:7px 9px;text-transform:none;letter-spacing:0;width:100%;resize:vertical;line-height:1.5}
+.cf-ready{display:flex;gap:14px;align-items:center;flex-wrap:wrap;font-size:12.5px}
+.cf-ready label{display:flex;gap:5px;align-items:center}
+.cf-ready input{accent-color:var(--accent)}
+.cf .err{color:var(--bad);font-size:12.5px}
+.cf-d summary{list-style:none;cursor:pointer;display:inline-flex}
+.cf-d summary::-webkit-details-marker{display:none}
+.sp-edit input{font:inherit;font-size:13px;color:var(--fg);background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:7px 9px;text-transform:none;letter-spacing:0}
+.view-title .btn{margin-left:auto}
