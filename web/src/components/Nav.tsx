@@ -25,9 +25,6 @@ export default function Nav() {
         <Link key={m.href} href={m.href} aria-current={active(m.href) ? "page" : undefined}><Icon>{m.ic}</Icon>{m.label}</Link>
       ))}
       <hr />
-      <span className="later" title="2차 범위" style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", fontWeight: 500 }}><Icon><circle cx="6" cy="6" r="3" /><circle cx="18" cy="18" r="3" /><circle cx="18" cy="6" r="3" /><path d="M8.5 7.5 15.5 16.5M9 6h6" /></Icon>관계도<span className="tag">2차</span></span>
-      <span className="later" title="2차 범위" style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", fontWeight: 500 }}><Icon><path d="M4 6h16M4 12h10M4 18h13" /></Icon>타임라인<span className="tag">2차</span></span>
-      <hr />
       <Link href="/settings" aria-current={active("/settings") ? "page" : undefined}><Icon><circle cx="12" cy="12" r="3" /><path d="M19 12a7 7 0 0 0-.1-1l2-1.5-2-3.5-2.4 1a7 7 0 0 0-1.7-1L14.5 3h-5l-.3 2.5a7 7 0 0 0-1.7 1l-2.4-1-2 3.5 2 1.5a7 7 0 0 0 0 2l-2 1.5 2 3.5 2.4-1a7 7 0 0 0 1.7 1l.3 2.5h5l.3-2.5a7 7 0 0 0 1.7-1l2.4 1 2-3.5-2-1.5c.1-.3.1-.7.1-1z" /></Icon>설정</Link>
     </div>
   );

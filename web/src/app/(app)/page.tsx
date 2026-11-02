@@ -1,92 +1,71 @@
 import Link from "next/link";
 import { all } from "@/lib/db";
-import { SHOT_CLASS, SHOT_LABEL, STATUS_CLASS, STATUS_LABEL, type Asset, type Character, type Episode, type Issue, type Place, type Shot } from "@/lib/types";
-import { Avatar, Card, ReadyBadges, Status } from "@/components/ui";
+import { SHOT_CLASS, SHOT_LABEL, type Asset, type Character, type Episode, type Issue, type Shot } from "@/lib/types";
+import { Avatar, Status } from "@/components/ui";
 
 export default function Home() {
   const characters = all<Character>("characters");
-  const places = all<Place>("places");
   const episodes = all<Episode>("episodes", undefined, "no");
-  const issues = all<Issue>("issues").filter((i) => i.status !== "decided");
-  const assets = all<Asset>("assets").sort((a, b) => b.at.localeCompare(a.at)).slice(0, 4);
-  const current = episodes.find((e) => e.status === "prod") ?? episodes.find((e) => e.status === "plan");
+  const issues = all<Issue>("issues").filter((issue) => issue.status !== "decided");
+  const assets = all<Asset>("assets").sort((a, b) => b.at.localeCompare(a.at));
+  const current = episodes.find((episode) => episode.status === "prod") ?? episodes.find((episode) => episode.status === "plan");
   const shots = current ? all<Shot>("shots", { col: "episode_id", val: current.id }, "no") : [];
-  const done = shots.filter((s) => s.status === "done").length;
-  const cand = shots.filter((s) => s.status === "cand" || s.status === "key").length;
+  const done = shots.filter((shot) => shot.status === "done").length;
 
   return (
     <>
-      <div className="view-title"><h1>홈</h1><span className="id">H-01</span><span className="crumb">작업 시작 화면</span>
-        <div className="actions"><Link className="btn sm ghost" href="/episodes">에피소드 목록</Link></div></div>
-      <div className="home">
-        <div className="col">
-          <Card title="캐릭터" sub="레퍼런스 준비: 얼굴 · 시트 · Soul ID · 동물형" more="전체 보기" moreHref="/characters">
-            <div className="row-list">
-              {characters.map((c) => (
-                <Link key={c.id} className="crow" href={`/characters/${c.id}`}>
-                  <Avatar initial={c.initial} color={c.color} />
-                  <span className="t"><b>{c.name}</b><span>{c.species} · {c.age} · {c.residence.includes("집주인") ? "집주인" : "입주자"}</span><ReadyBadges r={c.ready} /></span>
-                  <span className="r"><span className="mono">{c.promptVersion}</span></span>
-                </Link>
-              ))}
-              <div className="crow"><span className="av ghost">?</span><span className="t"><b className="muted">세 번째 입주자</b><span>종·관계 미정</span></span><span className="r"><Link className="chip todo" href="/issues">미정 항목</Link></span></div>
-            </div>
-          </Card>
-          <Card title="장소" sub="앵커 · 공통 프롬프트" more="전체 보기" moreHref="/places">
-            <div className="row-list">
-              {places.map((p) => (
-                <Link key={p.id} className="crow" href="/places">
-                  <span className="av place">{p.short}</span>
-                  <span className="t"><b>{p.name}</b><span>{p.note}</span></span>
-                  <span className="r"><span className="ready"><i className={p.anchor ? "" : "no"}>앵커</i></span><span className="mono">{p.promptVersion}</span></span>
-                </Link>
-              ))}
-            </div>
-          </Card>
-        </div>
+      <div className="view-title home-title">
+        <div><h1>작업 현황</h1><span className="crumb">오늘 이어서 할 작업만 모았습니다.</span></div>
+        <div className="actions"><Link className="btn sm" href={current ? `/episodes/${current.id}?tab=shots` : "/episodes"}>제작 화면 열기</Link></div>
+      </div>
 
-        <div className="col">
-          <Card title="제작 중인 에피소드" sub={current ? `${current.no} ${current.title} · 샷 ${shots.length}개 · 확정 ${done} · 후보 검토 ${cand}` : "제작 중인 에피소드가 없습니다"} more="상세 열기" moreHref={current ? `/episodes/${current.id}?tab=shots` : "/episodes"}>
-            <div className="board">
-              {shots.map((s) => (
-                <Link key={s.id} className="shot" href={`/episodes/${s.episodeId}?tab=shots`}>
-                  <span className="no">{s.no}</span>
-                  <span className="t"><b>{s.title}</b><span>{s.who} · {s.place} · {s.length}</span></span>
-                  <span className="r"><Status cls={SHOT_CLASS[s.status]}>{SHOT_LABEL[s.status]}</Status><span>{s.candidates ? `후보 ${s.candidates}` : "—"}</span></span>
-                </Link>
-              ))}
-            </div>
-            <div className="next"><b>다음 할 일</b><span>이현 Soul ID 학습 세트 만들기 (얼굴 앵커로 다각도 스틸 20장) → 샷 2·3a 영상 후보 확정 → 샷 3b 키프레임 조합</span></div>
-          </Card>
-          <Card title="에피소드" more="전체 보기" moreHref="/episodes">
-            <div className="row-list">
-              {episodes.map((e) => (
-                <Link key={e.id} className="erow" href={`/episodes/${e.id}`}>
-                  <span className="no">{e.no}</span>
-                  <span className="t"><b>{e.title}</b><span>{e.characters.map((c) => characters.find((x) => x.id === c)?.name ?? c).join(" · ")}{e.places.length ? " · " + e.places.map((p) => places.find((x) => x.id === p)?.short ?? p).join(", ") : ""}</span></span>
-                  <Status cls={STATUS_CLASS[e.status]}>{STATUS_LABEL[e.status]}</Status>
-                </Link>
-              ))}
-            </div>
-          </Card>
-        </div>
+      <div className="quick-stats" aria-label="프로젝트 요약">
+        <Link href="/episodes"><b>{episodes.length}</b><span>에피소드</span></Link>
+        <Link href="/characters"><b>{characters.length}</b><span>캐릭터</span></Link>
+        <Link href="/assets"><b>{assets.length}</b><span>소재</span></Link>
+        <Link href="/issues"><b className={issues.length ? "attention" : ""}>{issues.length}</b><span>결정 필요</span></Link>
+      </div>
 
-        <div className="col right">
-          <Card title="미정 항목" sub={`열림 ${issues.length}건`} more="전체 보기" moreHref="/issues">
-            <div className="row-list">
-              {issues.map((i) => (
-                <Link key={i.id} className="iss" href="/issues"><span className="k">{i.scope.split(" · ")[0]}</span><span className="t"><b>{i.title}</b><span>{i.blocks !== "—" ? `${i.blocks}를 막고 있음` : i.options}</span></span></Link>
+      <div className="dashboard">
+        <section className="card focus-card">
+          <div className="hd">
+            <div><span className="eyebrow">현재 제작</span><h2>{current ? `${current.no} · ${current.title}` : "제작 중인 에피소드 없음"}</h2>{current && <p>{current.hook}</p>}</div>
+            {current && <Link className="more" href={`/episodes/${current.id}`}>에피소드 상세</Link>}
+          </div>
+          <div className="bd">
+            {current && <div className="progress-line"><span style={{ width: `${shots.length ? (done / shots.length) * 100 : 0}%` }} /></div>}
+            <div className="progress-copy"><b>{shots.length ? `${done} / ${shots.length} 샷 확정` : "등록된 샷 없음"}</b><span>{shots.length - done}개 남음</span></div>
+            <div className="compact-shots">
+              {shots.map((shot) => (
+                <Link key={shot.id} href={`/episodes/${shot.episodeId}?tab=shots`}>
+                  <span className="mono">{shot.no}</span><b>{shot.title}</b><span>{shot.who} · {shot.place}</span><Status cls={SHOT_CLASS[shot.status]}>{SHOT_LABEL[shot.status]}</Status>
+                </Link>
               ))}
             </div>
-          </Card>
-          <Card title="최근 추가된 소재" more="전체 보기" moreHref="/assets">
-            <div className="row-list">
-              {assets.map((a) => (
-                <Link key={a.id} className="arow" href={`/assets/${a.id}`}><span className="ph">{a.name.split(".").pop()?.toUpperCase()}</span><span className="t"><b>{a.name}</b><span>{a.kind}{a.role ? ` · ${a.role}` : ""} · {a.at}</span></span></Link>
-              ))}
+          </div>
+        </section>
+
+        <aside className="dashboard-side">
+          <section className="card">
+            <div className="hd"><div><h2>결정 필요</h2><p>작업을 막고 있는 항목</p></div><Link className="more" href="/issues">전체</Link></div>
+            <div className="bd issue-stack">
+              {issues.slice(0, 4).map((issue) => <Link key={issue.id} href={`/issues?sel=${issue.id}`}><b>{issue.title}</b><span>{issue.scope}{issue.blocks !== "—" ? ` · ${issue.blocks}` : ""}</span></Link>)}
+              {!issues.length && <p className="muted small">결정할 항목이 없습니다.</p>}
             </div>
-          </Card>
-        </div>
+          </section>
+          <section className="card">
+            <div className="hd"><div><h2>캐릭터</h2></div><Link className="more" href="/characters">전체</Link></div>
+            <div className="bd people-row">
+              {characters.map((character) => <Link key={character.id} href={`/characters/${character.id}`}><Avatar initial={character.initial} color={character.color} /><span><b>{character.name}</b><small>{character.species}</small></span></Link>)}
+            </div>
+          </section>
+          <section className="card">
+            <div className="hd"><div><h2>최근 소재</h2></div><Link className="more" href="/assets">전체</Link></div>
+            <div className="bd recent-assets">
+              {assets.slice(0, 3).map((asset) => <Link key={asset.id} href={`/assets/${asset.id}`}><b>{asset.name}</b><span>{asset.kind} · {asset.at}</span></Link>)}
+            </div>
+          </section>
+        </aside>
       </div>
     </>
   );

@@ -1,5 +1,7 @@
 # AI 인플루언서 프로젝트
 
+> `web/` 구현과 UI 작업은 [COLLABORATION.md](COLLABORATION.md)의 공동 작업 및 제품 방향을 우선 적용한다.
+
 ## 역할 분담
 - Claude: 기획 및 문서 작성 (docs/ 폴더에 마크다운으로 저장)
 - Codex: 검토자. 문서를 수정하지 않고 비평만 함
