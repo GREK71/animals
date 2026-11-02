@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 
 const MAIN = [
   { href: "/", label: "홈", ic: <path d="M3 11 12 4l9 7v9H3z" /> },
+  { href: "/tasks", label: "작업", ic: <><path d="M9 5h11M9 12h11M9 19h11" /><path d="m3 5 1 1 2-2M3 12l1 1 2-2M3 19l1 1 2-2" /></> },
   { href: "/characters", label: "캐릭터", ic: <><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4 4-6 8-6s8 2 8 6" /></> },
   { href: "/places", label: "장소", ic: <path d="M4 21V9l8-6 8 6v12M9 21v-7h6v7" /> },
   { href: "/episodes", label: "에피소드", ic: <><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M3 10h18M8 5v14" /></> },

@@ -8,7 +8,7 @@ export default async function Settings() {
   const isAdmin = canManage(me);
   const users = getDb().prepare("SELECT id, username, name, role, created_at FROM users ORDER BY id").all() as { id: number; username: string; name: string; role: string; created_at: string }[];
   const backups = listBackups();
-  const tables = ["characters", "places", "episodes", "shots", "runs", "variants", "assets", "issues", "prompt_versions"];
+  const tables = ["characters", "places", "episodes", "shots", "runs", "variants", "assets", "issues", "tasks", "activity", "prompt_versions"];
   return (
     <>
       <div className="view-title"><h1>설정</h1><span className="id">S-01</span><span className="crumb">프로젝트 · 계정 · 생성 도구 · 백업</span></div>

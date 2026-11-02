@@ -1,16 +1,19 @@
 import Link from "next/link";
 import { all } from "@/lib/db";
-import { SHOT_CLASS, SHOT_LABEL, type Asset, type Character, type Episode, type Issue, type Shot } from "@/lib/types";
-import { Avatar, Status } from "@/components/ui";
+import { requireUser } from "@/lib/session";
+import { SHOT_CLASS, SHOT_LABEL, TASK_CLASS, TASK_LABEL, type Activity, type Episode, type Issue, type Shot, type Task } from "@/lib/types";
+import { Status } from "@/components/ui";
 
-export default function Home() {
-  const characters = all<Character>("characters");
+export default async function Home() {
+  const me = await requireUser();
   const episodes = all<Episode>("episodes", undefined, "no");
   const issues = all<Issue>("issues").filter((issue) => issue.status !== "decided");
-  const assets = all<Asset>("assets").sort((a, b) => b.at.localeCompare(a.at));
   const current = episodes.find((episode) => episode.status === "prod") ?? episodes.find((episode) => episode.status === "plan");
   const shots = current ? all<Shot>("shots", { col: "episode_id", val: current.id }, "no") : [];
   const done = shots.filter((shot) => shot.status === "done").length;
+  const tasks = all<Task>("tasks").filter((task) => task.status !== "done").sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+  const myTasks = tasks.filter((task) => task.assigneeId === me.id);
+  const activity = all<Activity>("activity").sort((a, b) => b.at.localeCompare(a.at)).slice(0, 5);
 
   return (
     <>
@@ -21,8 +24,8 @@ export default function Home() {
 
       <div className="quick-stats" aria-label="프로젝트 요약">
         <Link href="/episodes"><b>{episodes.length}</b><span>에피소드</span></Link>
-        <Link href="/characters"><b>{characters.length}</b><span>캐릭터</span></Link>
-        <Link href="/assets"><b>{assets.length}</b><span>소재</span></Link>
+        <Link href="/tasks"><b className={myTasks.length ? "attention" : ""}>{myTasks.length}</b><span>내 작업</span></Link>
+        <Link href="/tasks"><b>{tasks.length}</b><span>진행 작업</span></Link>
         <Link href="/issues"><b className={issues.length ? "attention" : ""}>{issues.length}</b><span>결정 필요</span></Link>
       </div>
 
@@ -47,6 +50,13 @@ export default function Home() {
 
         <aside className="dashboard-side">
           <section className="card">
+            <div className="hd"><div><h2>내 작업</h2><p>{me.name}님이 맡은 진행 항목</p></div><Link className="more" href="/tasks">작업 보드</Link></div>
+            <div className="bd team-task-list">
+              {myTasks.slice(0, 4).map((task) => <Link key={task.id} href={`/tasks#${task.id}`}><Status cls={TASK_CLASS[task.status]}>{TASK_LABEL[task.status]}</Status><span><b>{task.title}</b><small>{task.note || "인계 메모 없음"}</small></span></Link>)}
+              {!myTasks.length && <p className="muted small">현재 맡은 작업이 없습니다.</p>}
+            </div>
+          </section>
+          <section className="card">
             <div className="hd"><div><h2>결정 필요</h2><p>작업을 막고 있는 항목</p></div><Link className="more" href="/issues">전체</Link></div>
             <div className="bd issue-stack">
               {issues.slice(0, 4).map((issue) => <Link key={issue.id} href={`/issues?sel=${issue.id}`}><b>{issue.title}</b><span>{issue.scope}{issue.blocks !== "—" ? ` · ${issue.blocks}` : ""}</span></Link>)}
@@ -54,15 +64,10 @@ export default function Home() {
             </div>
           </section>
           <section className="card">
-            <div className="hd"><div><h2>캐릭터</h2></div><Link className="more" href="/characters">전체</Link></div>
-            <div className="bd people-row">
-              {characters.map((character) => <Link key={character.id} href={`/characters/${character.id}`}><Avatar initial={character.initial} color={character.color} /><span><b>{character.name}</b><small>{character.species}</small></span></Link>)}
-            </div>
-          </section>
-          <section className="card">
-            <div className="hd"><div><h2>최근 소재</h2></div><Link className="more" href="/assets">전체</Link></div>
-            <div className="bd recent-assets">
-              {assets.slice(0, 3).map((asset) => <Link key={asset.id} href={`/assets/${asset.id}`}><b>{asset.name}</b><span>{asset.kind} · {asset.at}</span></Link>)}
+            <div className="hd"><div><h2>최근 팀 활동</h2></div><Link className="more" href="/tasks">전체</Link></div>
+            <div className="bd recent-activity">
+              {activity.map((item) => <Link key={item.id} href={item.href}><span>{item.actorName.slice(0, 1)}</span><p><b>{item.actorName}</b> {item.text}<small>{item.at.slice(5, 16).replace("T", " ")}</small></p></Link>)}
+              {!activity.length && <p className="muted small">아직 팀 활동이 없습니다.</p>}
             </div>
           </section>
         </aside>

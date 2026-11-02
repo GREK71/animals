@@ -19,6 +19,8 @@ const DOC_TABLES: Record<string, string[]> = {
   relation_changes: ["episode_id"],
   files: ["owner_type", "owner_id"],
   shot_prompts: ["shot_id"],
+  tasks: [],
+  activity: [],
 };
 
 declare global {
@@ -153,6 +155,11 @@ export function put(table: string, id: string, data: object, refs: Record<string
 
 export function remove(table: string, id: string) {
   getDb().prepare(`DELETE FROM ${table} WHERE id = ?`).run(id);
+}
+
+export function logActivity(actor: { id: number; name: string }, kind: string, text: string, href: string) {
+  const id = `a${Date.now().toString(36)}${crypto.randomBytes(2).toString("hex")}`;
+  put("activity", id, { actorId: actor.id, actorName: actor.name, kind, text, href, at: new Date().toISOString() });
 }
 
 export function uploadsDir() {
