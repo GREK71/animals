@@ -17,13 +17,13 @@ export default async function DocumentDetail({ params, searchParams }: PageProps
 
   return (
     <>
-      <div className="view-title"><h1>{doc.title}</h1><span className="chip">{CATEGORY_LABEL[doc.category]}</span><Status cls={DOCUMENT_STATUS_CLASS[doc.status]}>{DOCUMENT_STATUS_LABEL[doc.status]}</Status><div className="actions"><a className="btn sm ghost" href={`/api/export/markdown?id=${id}`}>Markdown 받기</a></div></div>
+      <div className="view-title"><h1>{doc.title}</h1><span className="chip">{CATEGORY_LABEL[doc.category]}</span><Status cls={DOCUMENT_STATUS_CLASS[doc.status]}>{DOCUMENT_STATUS_LABEL[doc.status]}</Status><div className="actions"><a className="btn sm" href={`/documents/${id}?edit=1#editor`}>문서 편집</a><a className="btn sm ghost" href={`/api/export/markdown?id=${id}`}>Markdown 받기</a></div></div>
       {sp.conflict === "1" && <div className="conflict-banner"><b>다른 사용자가 먼저 저장했습니다.</b><span>최신 내용을 다시 확인한 뒤 변경을 합쳐 저장하세요. 기존 내용은 덮어쓰지 않았습니다.</span></div>}
       {sp.saved && <div className="saved-banner">v{sp.saved}으로 저장했습니다.</div>}
       <div className="document-layout">
         <section className="card document-preview"><div className="hd"><div><h2>게시 미리보기</h2><p>사람이 읽는 화면과 내보내기 결과의 본문입니다.</p></div></div><div className="bd"><MarkdownView content={doc.content} /></div></section>
         <aside className="document-side">
-          <details className="card document-editor">
+          <details id="editor" className="card document-editor" open={sp.edit === "1"}>
             <summary><b>편집 및 단계 변경</b><span>현재 v{doc.version}</span></summary>
             <form action={saveDocument} className="form">
               <input type="hidden" name="id" value={id} />

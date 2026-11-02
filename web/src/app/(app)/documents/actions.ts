@@ -57,6 +57,23 @@ export async function importMarkdown(form: FormData) {
   redirect(`/documents/${id}`);
 }
 
+export async function createDocument(form: FormData) {
+  const me = await requireUser();
+  const title = String(form.get("title") ?? "").trim().slice(0, 120);
+  if (!title) redirect("/documents?error=empty");
+  const categoryIn = String(form.get("category") ?? "note");
+  const category = CATEGORIES.has(categoryIn) ? categoryIn as ArchiveDocument["category"] : "note";
+  const now = new Date().toISOString();
+  const id = `d${crypto.randomBytes(6).toString("hex")}`;
+  const content = `# ${title}\n\n내용을 작성하세요.\n`;
+  const doc: ArchiveDocument = { title, slug: slugify(title), category, content, status: "draft", version: 1, createdBy: me.id, createdByName: me.name, createdAt: now, updatedByName: me.name, updatedAt: now };
+  put("documents", id, doc);
+  put("document_versions", `${id}-v1`, { documentId: id, version: 1, content, at: now, by: me.name, memo: "빈 문서 생성" } satisfies DocumentVersion, { document_id: id });
+  logActivity(me, "document", `“${title}” 문서를 만들었습니다`, `/documents/${id}`);
+  revalidatePath("/documents");
+  redirect(`/documents/${id}?edit=1`);
+}
+
 export async function saveDocument(form: FormData) {
   const me = await requireUser();
   const id = String(form.get("id") ?? "");

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { all } from "@/lib/db";
 import { DOCUMENT_STATUS_CLASS, DOCUMENT_STATUS_LABEL, type ArchiveDocument } from "@/lib/types";
 import { Status } from "@/components/ui";
-import { importMarkdown } from "./actions";
+import { createDocument, importMarkdown } from "./actions";
 
 const CATEGORY_LABEL: Record<string, string> = { episode: "에피소드", asset: "소재", character: "캐릭터", setting: "설정", note: "노트" };
 
@@ -21,6 +21,14 @@ export default async function Documents({ searchParams }: PageProps<"/documents"
         </form>
         {sp.error === "file" && <p className="archive-error">올바른 2MB 이하 Markdown 파일을 선택하세요.</p>}
         <p className="note">YAML frontmatter에 <code>title</code>과 <code>category: episode | asset | character | setting | note</code>를 넣으면 자동 분류됩니다.</p>
+        <details className="archive-create">
+          <summary>파일 없이 새 문서 만들기</summary>
+          <form action={createDocument} className="form">
+            <label>제목<input name="title" required placeholder="새 설정 또는 에피소드 제목" /></label>
+            <label>분류<select name="category" defaultValue="setting"><option value="episode">에피소드</option><option value="asset">소재</option><option value="character">캐릭터</option><option value="setting">설정</option><option value="note">노트</option></select></label>
+            <div><button className="btn sm" type="submit">빈 문서 만들기</button></div>
+          </form>
+        </details>
       </section>
 
       <div className="archive-tabs">
