@@ -11,7 +11,7 @@ export default async function Assets({ searchParams }: PageProps<"/assets">) {
   const assets = all<Asset>("assets").filter((a) => kind === "전체" || a.kind === kind).sort((a, b) => b.at.localeCompare(a.at));
   return (
     <>
-      <div className="view-title"><h1>소재</h1><span className="id">A-01</span><span className="crumb">{assets.length}건</span><div className="actions"><Link className="btn sm ghost" href="/assets?kind=휴지통">휴지통</Link></div></div>
+      <div className="view-title"><h1>소재</h1><span className="id">A-01</span><span className="crumb">{assets.length}건</span><div className="actions"><Link className="btn sm ghost" href="/documents?category=asset">소재 문서</Link><Link className="btn sm ghost" href="/assets?kind=휴지통">휴지통</Link></div></div>
       <section className="card">
         <div className="dtabs" role="tablist">{KINDS.map((k) => <Link key={k} role="tab" aria-selected={k === kind} href={k === "전체" ? "/assets" : `/assets?kind=${encodeURIComponent(k)}`}>{k}</Link>)}</div>
         <div className="pane">

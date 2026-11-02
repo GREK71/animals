@@ -21,6 +21,8 @@ const DOC_TABLES: Record<string, string[]> = {
   shot_prompts: ["shot_id"],
   tasks: [],
   activity: [],
+  documents: [],
+  document_versions: ["document_id"],
 };
 
 declare global {

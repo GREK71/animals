@@ -9,7 +9,7 @@ export default function Episodes() {
   const shots = all<Shot>("shots");
   return (
     <>
-      <div className="view-title"><h1>에피소드</h1><span className="id">E-01</span><span className="crumb">{episodes.length}편</span></div>
+      <div className="view-title"><h1>에피소드</h1><span className="id">E-01</span><span className="crumb">{episodes.length}편</span><div className="actions"><Link className="btn sm ghost" href="/documents?category=episode">에피소드 문서</Link></div></div>
       <section className="card"><div className="pane"><div className="tw"><table>
         <thead><tr><th>회차</th><th>제목</th><th>상태</th><th>등장인물</th><th>샷 진행</th><th>길이</th></tr></thead>
         <tbody>

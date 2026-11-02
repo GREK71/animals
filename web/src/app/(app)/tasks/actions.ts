@@ -5,9 +5,9 @@ import { getDb, logActivity, one, put } from "@/lib/db";
 import { requireUser } from "@/lib/session";
 import type { Task } from "@/lib/types";
 
-const STATUSES = new Set(["todo", "doing", "review", "done"]);
+const STATUSES = new Set(["todo", "doing", "review", "qa", "done"]);
 const PRIORITIES = new Set(["high", "normal", "low"]);
-const STATUS_NAMES: Record<Task["status"], string> = { todo: "할 일", doing: "진행 중", review: "검토", done: "완료" };
+const STATUS_NAMES: Record<Task["status"], string> = { todo: "할 일", doing: "진행 중", review: "검토", qa: "검수", done: "완료" };
 
 function userById(id: number) {
   return getDb().prepare("SELECT id, name FROM users WHERE id = ?").get(id) as { id: number; name: string } | undefined;

@@ -35,16 +35,25 @@ export type Issue = { scope: string; title: string; desc: string; options: strin
 export type PromptVersion = { ownerType: string; ownerId: string; v: string; body: string; memo: string; at: string; current: boolean };
 export type RelationChange = { episodeId: string; pair: string; before: string; after: string; memo: string; planned?: boolean };
 export type Task = {
-  title: string; note: string; status: "todo" | "doing" | "review" | "done";
+  title: string; note: string; status: "todo" | "doing" | "review" | "qa" | "done";
   priority: "high" | "normal" | "low"; assigneeId?: number; assigneeName?: string;
   link?: string; createdBy: number; createdByName: string; createdAt: string;
   updatedByName: string; updatedAt: string;
 };
 export type Activity = { actorId: number; actorName: string; kind: string; text: string; href: string; at: string };
+export type ArchiveDocument = {
+  title: string; slug: string; category: "episode" | "asset" | "character" | "setting" | "note";
+  content: string; status: "draft" | "review" | "qa" | "published"; version: number;
+  assigneeId?: number; assigneeName?: string; sourceName?: string;
+  createdBy: number; createdByName: string; createdAt: string; updatedByName: string; updatedAt: string;
+};
+export type DocumentVersion = { documentId: string; version: number; content: string; at: string; by: string; memo: string };
 
 export const STATUS_LABEL: Record<string, string> = { idea: "아이디어", plan: "기획", prod: "제작 중", done: "게시 완료" };
 export const STATUS_CLASS: Record<string, string> = { idea: "", plan: "info", prod: "warn", done: "ok" };
 export const SHOT_LABEL: Record<string, string> = { none: "미생성", key: "키프레임 검토", cand: "후보 검토", done: "확정" };
 export const SHOT_CLASS: Record<string, string> = { none: "", key: "info", cand: "warn", done: "ok" };
-export const TASK_LABEL: Record<string, string> = { todo: "할 일", doing: "진행 중", review: "검토", done: "완료" };
-export const TASK_CLASS: Record<string, string> = { todo: "", doing: "info", review: "warn", done: "ok" };
+export const TASK_LABEL: Record<string, string> = { todo: "할 일", doing: "진행 중", review: "검토", qa: "검수", done: "완료" };
+export const TASK_CLASS: Record<string, string> = { todo: "", doing: "info", review: "warn", qa: "bad", done: "ok" };
+export const DOCUMENT_STATUS_LABEL: Record<string, string> = { draft: "초안", review: "검토", qa: "검수", published: "게시" };
+export const DOCUMENT_STATUS_CLASS: Record<string, string> = { draft: "", review: "warn", qa: "bad", published: "ok" };

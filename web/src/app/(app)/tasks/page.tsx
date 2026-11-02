@@ -5,7 +5,7 @@ import { TASK_CLASS, TASK_LABEL, type Activity, type Task } from "@/lib/types";
 import { Status } from "@/components/ui";
 import { addTask, claimTask, updateTask } from "./actions";
 
-const COLUMNS: Task["status"][] = ["todo", "doing", "review", "done"];
+const COLUMNS: Task["status"][] = ["todo", "doing", "review", "qa", "done"];
 const PRIORITY_LABEL = { high: "높음", normal: "보통", low: "낮음" };
 
 export default async function Tasks() {
