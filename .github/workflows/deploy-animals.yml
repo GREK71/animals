@@ -1,0 +1,70 @@
+name: Deploy Animals
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "web/**"
+      - ".github/workflows/deploy-animals.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-animals-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Configure deployment key
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+        run: |
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/animals_deploy
+          chmod 600 ~/.ssh/animals_deploy
+          ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts
+
+      - name: Sync application source
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+        run: |
+          rsync -az --delete \
+            --exclude='.env' \
+            --exclude='data/' \
+            --exclude='node_modules/' \
+            --exclude='.next/' \
+            -e 'ssh -i ~/.ssh/animals_deploy' \
+            web/ "$DEPLOY_USER@$DEPLOY_HOST:/opt/apps/animals-src/"
+
+      - name: Rebuild and verify Animals
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+        run: |
+          ssh -i ~/.ssh/animals_deploy "$DEPLOY_USER@$DEPLOY_HOST" 'bash -se' <<'REMOTE'
+          set -euo pipefail
+          cd /opt/apps
+          docker compose build animals
+          docker compose up -d --no-deps animals
+
+          for attempt in $(seq 1 20); do
+            if docker compose exec -T animals node -e "fetch('http://127.0.0.1:3000/login').then(r => { if (!r.ok) process.exit(1) })"; then
+              docker compose ps animals
+              exit 0
+            fi
+            sleep 3
+          done
+
+          docker compose logs --tail=100 animals
+          exit 1
+          REMOTE
