@@ -1,6 +1,6 @@
-# ANIMAL HOUSE | 수인 쉐어하우스 기획
+# '개'수상함 프로젝트
 
-AI 인플루언서 채널 "수인 쉐어하우스"의 기획 문서와 제작 아카이브 화면 시안.
+AI 인플루언서 채널 "'개'수상함"의 기획 문서와 제작 아카이브 화면 시안.
 
 - 화면 시안 (클릭형): https://grek71.github.io/animals/
 - 화면 기획서: [docs/screen-plan.md](docs/screen-plan.md)
